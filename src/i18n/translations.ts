@@ -166,6 +166,22 @@ export const translations = {
     stockRemainingNotice: "left",
     restockedNotice: "Stock restored!",
     stockUpdatedToast: "Stock updated:",
+
+    // Login / Profile
+    loginTitle: "Apna Digital Khata",
+    loginSubtitle: "Kirana Stock & Reorder",
+    loginWelcome: "Connect with your shop",
+    loginNameLabel: "Your Name",
+    loginNamePlaceholder: "e.g. Rajesh Kumar",
+    loginMobileLabel: "Mobile Number",
+    loginMobilePlaceholder: "e.g. 9876543210",
+    loginBtn: "Login",
+    loginError: "Please enter name and 10-digit mobile number",
+    greetingPrefix: "Namaste,",
+    logoutBtn: "Logout",
+    logoutConfirm: "Are you sure you want to logout?",
+    loginSuccessToast: "Welcome!",
+    logoutSuccessToast: "Logged out successfully",
   },
 
   hi: {
@@ -285,5 +301,21 @@ export const translations = {
     stockRemainingNotice: "बचा",
     restockedNotice: "स्टॉक पूरा हो गया!",
     stockUpdatedToast: "स्टॉक अपडेट हो गया:",
+
+    // Login / Profile
+    loginTitle: "अपना डिजिटल खाता",
+    loginSubtitle: "किराना स्टॉक और रीऑर्डर",
+    loginWelcome: "अपनी दुकान से जुड़ें",
+    loginNameLabel: "आपका नाम",
+    loginNamePlaceholder: "जैसे: राजेश कुमार",
+    loginMobileLabel: "मोबाइल नंबर",
+    loginMobilePlaceholder: "जैसे: 9876543210",
+    loginBtn: "लॉगिन करें",
+    loginError: "कृपया नाम और 10 अंकों का मोबाइल नंबर भरें",
+    greetingPrefix: "नमस्ते,",
+    logoutBtn: "लॉगआउट",
+    logoutConfirm: "क्या आप सच में लॉगआउट करना चाहते हैं?",
+    loginSuccessToast: "स्वागत है!",
+    logoutSuccessToast: "लॉगआउट हो गया",
   },
 };

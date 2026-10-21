@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import {
   db,
@@ -14,12 +14,31 @@ import { SalesEntryScreen } from './components/SalesEntryScreen';
 import { ReorderSheetScreen } from './components/ReorderSheetScreen';
 import { NumpadSheet } from './components/NumpadSheet';
 import { AddItemModal } from './components/AddItemModal';
+import { LoginScreen } from './components/LoginScreen';
 import { Toaster, toast } from 'react-hot-toast';
 import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
+const STORAGE_KEY = 'kirana_user';
+
+interface KiranaUser {
+  name: string;
+  mobile: string;
+}
+
 const AppContent: React.FC = () => {
   const { t, getItemName, formatUnit } = useLanguage();
+
+  // Auth state from localStorage
+  const [user, setUser] = useState<KiranaUser | null>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('sales');
   const [numpadItem, setNumpadItem] = useState<KiranaItem | null>(null);
   const [isNumpadOpen, setIsNumpadOpen] = useState<boolean>(false);
@@ -54,6 +73,20 @@ const AppContent: React.FC = () => {
 
   // Count items needing reorder for bottom nav badge
   const reorderCount = items.filter((item) => item.stock <= item.reorderThreshold).length;
+
+  // Login handler
+  const handleLogin = useCallback((userData: KiranaUser) => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+    setUser(userData);
+    toast.success(`🙏 ${t('loginSuccessToast')} ${userData.name}`, { duration: 2000 });
+  }, [t]);
+
+  // Logout handler
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    setUser(null);
+    toast(t('logoutSuccessToast'), { duration: 1500, icon: '👋' });
+  }, [t]);
 
   // Instant 1-Tap Increment (+1) directly in Dexie
   const handleIncrement = async (item: KiranaItem) => {
@@ -110,12 +143,23 @@ const AppContent: React.FC = () => {
     await db.items.add(newItem as KiranaItem);
   };
 
+  // If not logged in, show Login Screen
+  if (!user) {
+    return (
+      <div className="h-full flex flex-col bg-slate-900 select-none overflow-hidden font-sans">
+        <div className="flex-1 flex flex-col h-full max-w-md w-full mx-auto shadow-2xl relative overflow-hidden">
+          <LoginScreen onLogin={handleLogin} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col bg-slate-900 dark:bg-black text-slate-900 dark:text-slate-100 select-none overflow-hidden font-sans transition-colors duration-150">
       {/* Mobile Frame Container */}
       <div className="flex-1 flex flex-col h-full max-w-md w-full mx-auto bg-slate-100 dark:bg-slate-950 shadow-2xl relative overflow-hidden transition-colors duration-150">
         {/* Top Header */}
-        <Header isOnline={isOnline} />
+        <Header isOnline={isOnline} userName={user.name} onLogout={handleLogout} />
 
         {/* Main Screen Content */}
         <main className="flex-1 flex flex-col overflow-hidden relative pb-16">
@@ -200,3 +244,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+
