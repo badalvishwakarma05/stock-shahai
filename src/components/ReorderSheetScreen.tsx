@@ -3,12 +3,12 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db, isDeadStock, getDaysSinceSold } from '../db/db';
 import { KiranaItem } from '../types';
 import { sendWhatsAppOrder } from '../utils/whatsapp';
+import { triggerHaptic } from '../utils/haptics';
 import {
   AlertTriangle,
   Clock,
   CheckCircle,
   PackageCheck,
-  RotateCcw,
 } from 'lucide-react';
 
 interface ReorderSheetScreenProps {
@@ -29,9 +29,15 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
   const lowStockItems = items.filter((item) => item.stock <= item.reorderThreshold);
   const deadStockItems = items.filter((item) => isDeadStock(item.lastSoldDate));
 
-  // 3. Trigger WhatsApp Deep Link Order
+  // 3. Trigger WhatsApp Deep Link Order with instant haptic feedback
   const handleWhatsAppClick = () => {
+    triggerHaptic(50);
     sendWhatsAppOrder(lowStockItems);
+  };
+
+  const handleRefillClick = (item: KiranaItem) => {
+    triggerHaptic(50);
+    onOpenNumpad(item);
   };
 
   return (
@@ -94,8 +100,8 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
 
                     {/* Fat Refill Button (Minimum 56px touch target) */}
                     <button
-                      onClick={() => onOpenNumpad(item)}
-                      className="h-14 min-h-14 px-3.5 bg-slate-900 text-white rounded-xl text-xs font-bold flex flex-col items-center justify-center touch-active flex-shrink-0 shadow-sm"
+                      onClick={() => handleRefillClick(item)}
+                      className="h-14 min-h-14 px-3.5 bg-slate-900 text-white rounded-xl text-xs font-bold flex flex-col items-center justify-center touch-active active:scale-95 active:brightness-90 transition-all duration-150 flex-shrink-0 shadow-sm"
                       aria-label={`${item.name} stock refill karein`}
                     >
                       <span>Naya Maal</span>
@@ -156,8 +162,8 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
                     </div>
 
                     <button
-                      onClick={() => onOpenNumpad(item)}
-                      className="h-12 min-h-12 px-3 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-xl text-xs flex items-center justify-center touch-active flex-shrink-0 border border-amber-300"
+                      onClick={() => handleRefillClick(item)}
+                      className="h-12 min-h-12 px-3 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-xl text-xs flex items-center justify-center touch-active active:scale-95 active:brightness-90 transition-all duration-150 flex-shrink-0 border border-amber-300"
                     >
                       Update
                     </button>
@@ -169,11 +175,11 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
         </section>
       </div>
 
-      {/* MASSIVE FIXED BOTTOM DEEP LINK BUTTON (Safely positioned above the 64px bottom nav) */}
+      {/* MASSIVE FIXED BOTTOM DEEP LINK BUTTON */}
       <button
         onClick={handleWhatsAppClick}
         disabled={lowStockItems.length === 0}
-        className={`fixed bottom-16 w-[90%] left-[5%] max-w-[calc(28rem*0.9)] right-[5%] mx-auto h-14 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl font-bold flex items-center justify-center space-x-2 shadow-lg touch-active z-20 text-base transition-all ${
+        className={`fixed bottom-16 w-[90%] left-[5%] max-w-[calc(28rem*0.9)] right-[5%] mx-auto h-14 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl font-bold flex items-center justify-center space-x-2 shadow-lg touch-active active:scale-95 active:brightness-90 transition-all duration-150 z-20 text-base ${
           lowStockItems.length === 0
             ? 'opacity-50 cursor-not-allowed bg-slate-300 shadow-none'
             : 'shadow-green-500/30'

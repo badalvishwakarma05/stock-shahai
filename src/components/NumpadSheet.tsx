@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Delete, Check, X, Plus, Minus, RotateCcw } from 'lucide-react';
 import { KiranaItem } from '../types';
+import { triggerHaptic } from '../utils/haptics';
 
 interface NumpadSheetProps {
   item: KiranaItem | null;
@@ -25,19 +26,13 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
 
   if (!isOpen || !item) return null;
 
-  // Haptic feedback helper for native Android tactile feel
-  const triggerHaptic = () => {
-    if (typeof window !== 'undefined' && 'vibrate' in navigator) {
-      try {
-        navigator.vibrate(15);
-      } catch (e) {
-        // ignore
-      }
-    }
+  const handleClose = () => {
+    triggerHaptic(50);
+    onClose();
   };
 
   const handleDigit = (digit: string) => {
-    triggerHaptic();
+    triggerHaptic(50);
     if (digit === '.') {
       if (inputValue.includes('.')) return; // Prevent multiple decimals
       setInputValue((prev) => (prev === '' ? '0.' : prev + '.'));
@@ -55,7 +50,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
   };
 
   const handleBackspace = () => {
-    triggerHaptic();
+    triggerHaptic(50);
     setInputValue((prev) => {
       if (prev.length <= 1) return '0';
       return prev.slice(0, -1);
@@ -63,12 +58,12 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
   };
 
   const handleClear = () => {
-    triggerHaptic();
+    triggerHaptic(50);
     setInputValue('0');
   };
 
   const handleQuickAdd = (amount: number) => {
-    triggerHaptic();
+    triggerHaptic(50);
     const current = parseFloat(inputValue);
     const validCurrent = isNaN(current) ? 0 : current;
     const result = Math.max(0, Math.round((validCurrent + amount) * 100) / 100);
@@ -76,7 +71,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
   };
 
   const handleSave = () => {
-    triggerHaptic();
+    triggerHaptic(50);
     const parsed = parseFloat(inputValue);
     const validStock = isNaN(parsed) ? 0 : Math.max(0, Math.round(parsed * 100) / 100);
     if (item.id !== undefined) {
@@ -94,7 +89,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        onClick={handleClose}
       />
 
       {/* Sliding Sheet */}
@@ -117,8 +112,8 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800 touch-active flex-shrink-0"
+            onClick={handleClose}
+            className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:text-slate-800 touch-active active:scale-95 active:brightness-90 transition-all duration-150 flex-shrink-0"
             aria-label="Radd Karein"
           >
             <X className="w-5 h-5" />
@@ -155,25 +150,25 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
         <div className="grid grid-cols-4 gap-2 px-3 pt-2.5 pb-1 bg-white">
           <button
             onClick={() => handleQuickAdd(-1)}
-            className="h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center justify-center text-sm touch-active border border-slate-200"
+            className="h-11 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl flex items-center justify-center text-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-slate-200"
           >
             <Minus className="w-3.5 h-3.5 mr-1" /> 1
           </button>
           <button
             onClick={() => handleQuickAdd(1)}
-            className="h-11 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl flex items-center justify-center text-sm touch-active border border-emerald-200"
+            className="h-11 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl flex items-center justify-center text-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-emerald-200"
           >
             <Plus className="w-3.5 h-3.5 mr-1" /> 1
           </button>
           <button
             onClick={() => handleQuickAdd(5)}
-            className="h-11 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl flex items-center justify-center text-sm touch-active border border-emerald-200"
+            className="h-11 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl flex items-center justify-center text-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-emerald-200"
           >
             <Plus className="w-3.5 h-3.5 mr-1" /> 5
           </button>
           <button
             onClick={() => handleQuickAdd(10)}
-            className="h-11 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl flex items-center justify-center text-sm touch-active border border-emerald-200"
+            className="h-11 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl flex items-center justify-center text-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-emerald-200"
           >
             <Plus className="w-3.5 h-3.5 mr-1" /> 10
           </button>
@@ -185,7 +180,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
             <button
               key={digit}
               onClick={() => handleDigit(digit)}
-              className="h-14 min-h-14 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center shadow-sm touch-active border border-slate-200/80 transition-transform"
+              className="h-14 min-h-14 bg-slate-100 hover:bg-slate-200 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-slate-200/80"
             >
               {digit}
             </button>
@@ -194,7 +189,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
           {/* Decimal Button */}
           <button
             onClick={() => handleDigit('.')}
-            className="h-14 min-h-14 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-900 text-3xl font-extrabold rounded-2xl flex items-center justify-center shadow-sm touch-active border border-slate-300"
+            className="h-14 min-h-14 bg-slate-200 hover:bg-slate-300 text-slate-900 text-3xl font-extrabold rounded-2xl flex items-center justify-center shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-slate-300"
             aria-label="Decimal"
           >
             .
@@ -203,7 +198,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
           {/* Zero Button */}
           <button
             onClick={() => handleDigit('0')}
-            className="h-14 min-h-14 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center shadow-sm touch-active border border-slate-200/80"
+            className="h-14 min-h-14 bg-slate-100 hover:bg-slate-200 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-slate-200/80"
           >
             0
           </button>
@@ -211,7 +206,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
           {/* Backspace Button */}
           <button
             onClick={handleBackspace}
-            className="h-14 min-h-14 bg-rose-50 hover:bg-rose-100 active:bg-rose-200 text-rose-600 font-bold rounded-2xl flex items-center justify-center shadow-sm touch-active border border-rose-200"
+            className="h-14 min-h-14 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold rounded-2xl flex items-center justify-center shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-rose-200"
             aria-label="Mitao (Backspace)"
           >
             <Delete className="w-6 h-6 stroke-[2.2]" />
@@ -222,7 +217,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
         <div className="p-3 pt-0 bg-white grid grid-cols-4 gap-2">
           <button
             onClick={handleClear}
-            className="col-span-1 h-14 min-h-14 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-2xl flex flex-col items-center justify-center touch-active border border-slate-300"
+            className="col-span-1 h-14 min-h-14 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-2xl flex flex-col items-center justify-center touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-slate-300"
           >
             <RotateCcw className="w-4 h-4 mb-0.5" />
             <span>Saaf</span>
@@ -230,7 +225,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
 
           <button
             onClick={handleSave}
-            className="col-span-3 h-14 min-h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-base font-bold rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/30 touch-active"
+            className="col-span-3 h-14 min-h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-base font-bold rounded-2xl flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/30 touch-active active:scale-95 active:brightness-90 transition-all duration-150"
           >
             <Check className="w-6 h-6 stroke-[2.5]" />
             <span className="tracking-wide">Sale Log Karein</span>

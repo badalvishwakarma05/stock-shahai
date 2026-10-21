@@ -123,14 +123,18 @@
 
       const showToast = (msg) => {
         setToastMsg(msg);
-        if ('vibrate' in navigator) {
-          try { navigator.vibrate(15); } catch(e){}
-        }
         setTimeout(() => setToastMsg(''), 2200);
+      };
+
+      const triggerHaptic = (duration = 50) => {
+        if ('vibrate' in navigator) {
+          try { navigator.vibrate(duration); } catch(e){}
+        }
       };
 
       // 1-Tap Increment
       const handleIncrement = async (item) => {
+        triggerHaptic(50);
         const delta = item.unit === 'kg' && item.stock < 2 ? 0.5 : 1;
         const newStock = Math.round((item.stock + delta) * 100) / 100;
         await db.items.update(item.id, { stock: newStock });
@@ -140,6 +144,7 @@
 
       // 1-Tap Decrement
       const handleDecrement = async (item) => {
+        triggerHaptic(50);
         const delta = item.unit === 'kg' && item.stock <= 2 && item.stock > 0 ? 0.5 : 1;
         const newStock = Math.max(0, Math.round((item.stock - delta) * 100) / 100);
         const today = new Date().toISOString().split('T')[0];
@@ -150,6 +155,7 @@
 
       // Save from Custom Sliding Numpad
       const handleSaveNumpad = async (itemId, newStock) => {
+        triggerHaptic(50);
         const today = new Date().toISOString().split('T')[0];
         await db.items.update(itemId, { stock: newStock, lastSoldDate: today });
         await loadItems();
@@ -171,6 +177,7 @@
       };
 
       const handleWhatsAppOrder = (khatamMaal) => {
+        triggerHaptic(50);
         if (khatamMaal.length === 0) {
           showToast('Koi maal khatam nahi hai!');
           return;
@@ -297,8 +304,8 @@
                             </div>
                             {/* Tap Stock to Open Sliding Numpad */}
                             <button
-                              onClick={() => setNumpadItem(item)}
-                              className="mt-2 inline-flex items-center space-x-1.5 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-300 touch-active"
+                              onClick={() => { triggerHaptic(50); setNumpadItem(item); }}
+                              className="mt-2 inline-flex items-center space-x-1.5 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-300 touch-active active:scale-95 active:brightness-90 transition-all duration-150"
                             >
                               <span className="text-xs text-slate-500">Stock:</span>
                               <span className={`text-base font-extrabold ${isLow ? 'text-rose-600' : 'text-emerald-700'}`}>
@@ -314,7 +321,7 @@
                             <button
                               onClick={() => handleDecrement(item)}
                               disabled={item.stock <= 0}
-                              className={`w-14 h-14 min-w-14 min-h-14 rounded-2xl flex items-center justify-center font-black text-2xl shadow-md touch-active ${
+                              className={`w-14 h-14 min-w-14 min-h-14 rounded-2xl flex items-center justify-center font-black text-2xl shadow-md touch-active active:scale-95 active:brightness-90 transition-all duration-150 ${
                                 item.stock <= 0
                                   ? 'bg-slate-100 text-slate-300 cursor-not-allowed border'
                                   : 'bg-rose-50 text-rose-600 border-2 border-rose-200 active:bg-rose-600 active:text-white'
@@ -324,7 +331,7 @@
                             </button>
                             <button
                               onClick={() => handleIncrement(item)}
-                              className="w-14 h-14 min-w-14 min-h-14 rounded-2xl bg-emerald-600 active:bg-emerald-800 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-emerald-600/30 touch-active border-2 border-emerald-500"
+                              className="w-14 h-14 min-w-14 min-h-14 rounded-2xl bg-emerald-600 active:bg-emerald-800 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-emerald-600/30 touch-active active:scale-95 active:brightness-90 transition-all duration-150 border-2 border-emerald-500"
                             >
                               +
                             </button>
@@ -533,10 +540,10 @@
 
             {/* Quick Increment Chips */}
             <div className="grid grid-cols-4 gap-2 px-3 pt-2 bg-white">
-              <button onClick={() => handleQuickAdd(-1)} className="h-10 bg-slate-100 font-bold rounded-xl text-sm touch-active border">- 1</button>
-              <button onClick={() => handleQuickAdd(1)} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active border border-emerald-200">+ 1</button>
-              <button onClick={() => handleQuickAdd(5)} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active border border-emerald-200">+ 5</button>
-              <button onClick={() => handleQuickAdd(10)} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active border border-emerald-200">+ 10</button>
+              <button onClick={() => { triggerHaptic(50); handleQuickAdd(-1); }} className="h-10 bg-slate-100 font-bold rounded-xl text-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border">- 1</button>
+              <button onClick={() => { triggerHaptic(50); handleQuickAdd(1); }} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-emerald-200">+ 1</button>
+              <button onClick={() => { triggerHaptic(50); handleQuickAdd(5); }} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-emerald-200">+ 5</button>
+              <button onClick={() => { triggerHaptic(50); handleQuickAdd(10); }} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-emerald-200">+ 10</button>
             </div>
 
             {/* Fat Numpad Grid (h-14) */}
@@ -544,22 +551,22 @@
               {['1','2','3','4','5','6','7','8','9'].map(d => (
                 <button
                   key={d}
-                  onClick={() => handleKey(d)}
-                  className="h-14 min-h-14 bg-slate-100 active:bg-slate-300 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center border border-slate-200 touch-active"
+                  onClick={() => { triggerHaptic(50); handleKey(d); }}
+                  className="h-14 min-h-14 bg-slate-100 active:bg-slate-300 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center border border-slate-200 touch-active active:scale-95 active:brightness-90 transition-all duration-150"
                 >
                   {d}
                 </button>
               ))}
-              <button onClick={() => handleKey('.')} className="h-14 min-h-14 bg-slate-200 text-slate-900 text-3xl font-black rounded-2xl flex items-center justify-center touch-active">.</button>
-              <button onClick={() => handleKey('0')} className="h-14 min-h-14 bg-slate-100 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center border touch-active">0</button>
-              <button onClick={handleBackspace} className="h-14 min-h-14 bg-rose-50 text-rose-600 font-bold text-xl rounded-2xl flex items-center justify-center border border-rose-200 touch-active">⌫</button>
+              <button onClick={() => { triggerHaptic(50); handleKey('.'); }} className="h-14 min-h-14 bg-slate-200 text-slate-900 text-3xl font-black rounded-2xl flex items-center justify-center touch-active active:scale-95 active:brightness-90 transition-all duration-150">.</button>
+              <button onClick={() => { triggerHaptic(50); handleKey('0'); }} className="h-14 min-h-14 bg-slate-100 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center border touch-active active:scale-95 active:brightness-90 transition-all duration-150">0</button>
+              <button onClick={() => { triggerHaptic(50); handleBackspace(); }} className="h-14 min-h-14 bg-rose-50 text-rose-600 font-bold text-xl rounded-2xl flex items-center justify-center border border-rose-200 touch-active active:scale-95 active:brightness-90 transition-all duration-150">⌫</button>
             </div>
 
             <div className="p-3 pt-0 grid grid-cols-4 gap-2 bg-white">
-              <button onClick={() => setVal('0')} className="col-span-1 h-14 min-h-14 bg-slate-100 text-slate-600 text-xs font-bold rounded-2xl border touch-active">Saaf</button>
+              <button onClick={() => { triggerHaptic(50); setVal('0'); }} className="col-span-1 h-14 min-h-14 bg-slate-100 text-slate-600 text-xs font-bold rounded-2xl border touch-active active:scale-95 active:brightness-90 transition-all duration-150">Saaf</button>
               <button
-                onClick={() => onSave(item.id, parseFloat(val) || 0)}
-                className="col-span-3 h-14 min-h-14 bg-emerald-600 active:bg-emerald-800 text-white text-base font-bold rounded-2xl flex items-center justify-center shadow-lg touch-active"
+                onClick={() => { triggerHaptic(50); onSave(item.id, parseFloat(val) || 0); }}
+                className="col-span-3 h-14 min-h-14 bg-emerald-600 active:bg-emerald-800 text-white text-base font-bold rounded-2xl flex items-center justify-center shadow-lg touch-active active:scale-95 active:brightness-90 transition-all duration-150"
               >
                 ✓ Log Karein (Stock Save)
               </button>

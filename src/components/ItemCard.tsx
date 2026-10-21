@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Minus, Edit3, AlertCircle } from 'lucide-react';
 import { KiranaItem } from '../types';
+import { triggerHaptic } from '../utils/haptics';
 
 interface ItemCardProps {
   item: KiranaItem;
@@ -17,6 +18,21 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   // Dynamically calculate low stock status
   const isLowStock = item.stock <= item.reorderThreshold;
+
+  const handleIncrementClick = () => {
+    triggerHaptic(50);
+    onIncrement(item);
+  };
+
+  const handleDecrementClick = () => {
+    triggerHaptic(50);
+    onDecrement(item);
+  };
+
+  const handleStockClick = () => {
+    triggerHaptic(50);
+    onOpenNumpad(item);
+  };
 
   return (
     <div
@@ -56,8 +72,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
           {/* Tappable Stock Badge - Opens Custom Sliding Numpad */}
           <button
-            onClick={() => onOpenNumpad(item)}
-            className="mt-2.5 inline-flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 px-3 py-1.5 rounded-xl border border-slate-300/80 touch-active"
+            onClick={handleStockClick}
+            className="mt-2.5 inline-flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 active:scale-95 active:brightness-90 transition-all duration-150 px-3 py-1.5 rounded-xl border border-slate-300/80 touch-active"
             title="Stock badalne ke liye tap karein"
           >
             <span className="text-xs text-slate-500 font-semibold">Stock:</span>
@@ -81,9 +97,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         <div className="flex items-center space-x-2 flex-shrink-0">
           {/* Decrement Button (-) Minimum 56px (h-14 w-14) */}
           <button
-            onClick={() => onDecrement(item)}
+            onClick={handleDecrementClick}
             disabled={item.stock <= 0}
-            className={`w-14 h-14 min-w-14 min-h-14 rounded-2xl flex items-center justify-center shadow-md touch-active transition-all ${
+            className={`w-14 h-14 min-w-14 min-h-14 rounded-2xl flex items-center justify-center shadow-md touch-active active:scale-95 active:brightness-90 transition-all duration-150 ${
               item.stock <= 0
                 ? 'bg-slate-100 text-slate-300 cursor-not-allowed border border-slate-200'
                 : 'bg-rose-50 text-rose-600 border-2 border-rose-200 active:bg-rose-600 active:text-white'
@@ -95,8 +111,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
           {/* Increment Button (+) Minimum 56px (h-14 w-14) */}
           <button
-            onClick={() => onIncrement(item)}
-            className="w-14 h-14 min-w-14 min-h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white flex items-center justify-center shadow-md shadow-emerald-600/30 touch-active border-2 border-emerald-500"
+            onClick={handleIncrementClick}
+            className="w-14 h-14 min-w-14 min-h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white flex items-center justify-center shadow-md shadow-emerald-600/30 touch-active active:scale-95 active:brightness-90 transition-all duration-150 border-2 border-emerald-500"
             aria-label={`${item.name} ka stock 1 badhao`}
           >
             <Plus className="w-7 h-7 stroke-[2.8]" />
