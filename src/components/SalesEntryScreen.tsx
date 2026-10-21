@@ -34,11 +34,11 @@ export const SalesEntryScreen: React.FC<SalesEntryScreenProps> = ({
   const categories = [
     { id: 'ALL', label: t('catAll') },
     { id: 'LOW', label: t('catLowStock') },
-    { id: 'Aata & Dals', label: 'Aata & Dals' },
-    { id: 'Snacks', label: 'Snacks' },
-    { id: 'Masala & Spices', label: 'Masala & Spices' },
-    { id: 'Oils & Ghee', label: 'Oils & Ghee' },
-    { id: 'Dairy', label: 'Dairy' },
+    { id: 'Aata & Dals', label: t('catAataDals') },
+    { id: 'Snacks', label: t('catSnacks') },
+    { id: 'Masala & Spices', label: t('catMasala') },
+    { id: 'Oils & Ghee', label: t('catOilGhee') },
+    { id: 'Dairy', label: t('catDairy') },
   ];
 
   // Filter items without needing an on-screen keyboard
@@ -105,7 +105,7 @@ export const SalesEntryScreen: React.FC<SalesEntryScreenProps> = ({
       <div className="flex-1 overflow-y-auto px-3.5 pt-3 pb-24 space-y-2.5 no-scrollbar">
         {filteredItems.length === 0 ? (
           <div className="text-center py-12 px-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 mt-4 transition-colors duration-150">
-            <p className="text-base font-bold text-slate-700 dark:text-slate-200">{t('noItemsFound')}</p>
+            <p className="text-base font-bold text-slate-700 dark:text-slate-200">{t('noItems')}</p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
               {t('noItemsSub')}
             </p>

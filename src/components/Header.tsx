@@ -61,16 +61,16 @@ export const Header: React.FC<HeaderProps> = ({ isOnline: propIsOnline }) => {
 
         {/* Right: Tactile Quick Controls & Offline Indicator */}
         <div className="flex items-center space-x-1.5 flex-shrink-0">
-          {/* Language Toggle Button ("A/अ" - Fat-Finger Friendly) */}
+          {/* Language Toggle Button - Fat-Finger Friendly */}
           <button
             onClick={handleLanguageClick}
-            className="h-10 min-w-10 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 text-xs font-bold text-slate-200 flex items-center justify-center space-x-1 shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150"
+            className="h-10 min-w-[56px] px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 text-xs font-bold text-slate-200 flex items-center justify-center space-x-1.5 shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150"
             aria-label={t('langToggleAria')}
-            title="Toggle English / Hinglish"
+            title={language === 'en' ? 'हिंदी में बदलें' : 'Switch to English'}
           >
-            <span className="text-emerald-400 font-black text-sm">A/अ</span>
-            <span className="text-[10px] font-semibold text-slate-300 uppercase">
-              {language === 'hi' ? 'HI' : 'EN'}
+            <span className="text-emerald-400 font-extrabold text-xs">A/अ</span>
+            <span className="font-bold text-xs tracking-tight text-slate-100">
+              {language === 'en' ? 'हिंदी' : 'EN'}
             </span>
           </button>
 
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({ isOnline: propIsOnline }) => {
             onClick={handleThemeClick}
             className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 text-slate-200 flex items-center justify-center shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150"
             aria-label={t('themeToggleAria')}
-            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            title={theme === 'dark' ? t('themeDarkTooltip') : t('themeLightTooltip')}
           >
             {theme === 'dark' ? (
               <Sun className="w-5 h-5 text-amber-400 stroke-[2.2]" />

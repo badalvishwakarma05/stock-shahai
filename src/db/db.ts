@@ -18,6 +18,8 @@ export const db = new KiranaDatabase();
  * Seeder function: populates the DB with realistic Indian grocery items
  * ONLY if the database is currently empty.
  */
+import { ITEM_NAME_TRANSLATIONS } from '../i18n/translations';
+
 export const seedInitialData = async (): Promise<void> => {
   const count = await db.items.count();
   if (count === 0) {
@@ -26,61 +28,85 @@ export const seedInitialData = async (): Promise<void> => {
     const initialItems: Omit<KiranaItem, 'id'>[] = [
       {
         name: 'Aashirvaad Shudh Chakki Aata 10kg',
+        nameHi: 'आशीर्वाद शुद्ध चक्की आटा 10 किलो',
         stock: 4,
         reorderThreshold: 6,
         category: 'Aata & Dals',
         unit: 'pkt',
+        unitHi: 'पैकेट',
         lastSoldDate: today,
         pricePerUnit: 440,
       },
       {
         name: 'Tata Salt (Namak) 1kg',
+        nameHi: 'टाटा नमक 1 किलो',
         stock: 14,
         reorderThreshold: 10,
         category: 'Masala & Spices',
         unit: 'pkt',
+        unitHi: 'पैकेट',
         lastSoldDate: today,
         pricePerUnit: 28,
       },
       {
         name: 'Maggi Masala 2-Min Noodles 70g',
+        nameHi: 'मैगी मसाला 2-मिनट नूडल्स 70 ग्राम',
         stock: 2,
         reorderThreshold: 20,
         category: 'Snacks',
         unit: 'pkt',
+        unitHi: 'पैकेट',
         lastSoldDate: today,
         pricePerUnit: 14,
       },
       {
         name: 'Fortune Kachi Ghani Mustard Oil 1L',
+        nameHi: 'फॉर्च्यून कच्ची घानी सरसों का तेल 1 लीटर',
         stock: 1.5, // Decimal stock supported (1.5 L)
         reorderThreshold: 8,
         category: 'Oils & Ghee',
         unit: 'L',
+        unitHi: 'लीटर',
         lastSoldDate: getPastDateString(2),
         pricePerUnit: 155,
       },
       {
         name: 'Amul Pasteurised Butter 500g',
+        nameHi: 'अमूल मक्खन (बटर) 500 ग्राम',
         stock: 0.5, // Decimal weight supported (0.5 kg)
         reorderThreshold: 3,
         category: 'Dairy',
         unit: 'kg',
+        unitHi: 'किलो',
         lastSoldDate: today,
         pricePerUnit: 275,
       },
       {
         name: 'MDH Deggi Mirch Powder 100g',
+        nameHi: 'एमडीएच देगी मिर्च पाउडर 100 ग्राम',
         stock: 9,
         reorderThreshold: 4,
         category: 'Masala & Spices',
         unit: 'pkt',
+        unitHi: 'पैकेट',
         lastSoldDate: getPastDateString(35), // Dead stock (>20 days)
         pricePerUnit: 85,
       },
     ];
 
     await db.items.bulkAdd(initialItems as KiranaItem[]);
+  } else {
+    // Enrich existing items in DB with Hindi names if missing
+    try {
+      const existingItems = await db.items.toArray();
+      for (const item of existingItems) {
+        if (!item.nameHi && item.id !== undefined && ITEM_NAME_TRANSLATIONS[item.name]) {
+          await db.items.update(item.id, { nameHi: ITEM_NAME_TRANSLATIONS[item.name] });
+        }
+      }
+    } catch {
+      // ignore
+    }
   }
 };
 

@@ -1,28 +1,32 @@
 import { KiranaItem } from '../types';
 import toast from 'react-hot-toast';
+import { Language, getItemName, formatUnit } from '../i18n/translations';
 
 /**
- * Generates a clean, readable text string in Hindi/Hinglish or English
+ * Generates a clean, readable text string in Hindi/Devanagari or English
  * formatted specifically for kirana supplier reorders on WhatsApp.
- *
- * Example Output:
- * Bhaiya, kripya niche likha saaman bhej dein:
- * 1. Aashirvaad Aata 10kg - [Require: 2 pkt]
- * 2. Tata Salt 1kg - [Require: 6 pkt]
  */
-export const generateWhatsAppOrder = (items: KiranaItem[], greeting?: string): string => {
+export const generateWhatsAppOrder = (
+  items: KiranaItem[],
+  greeting?: string,
+  requirePrefix?: string,
+  lang: Language = 'hi'
+): string => {
   if (!items || items.length === 0) return '';
 
-  const headerGreeting = greeting || `Bhaiya, kripya niche likha saaman bhej dein:\n`;
+  const headerGreeting = greeting || `नमस्ते, कृपया नीचे लिखा सामान भेज दें:\n`;
+  const reqPrefix = requirePrefix || 'जरूरत:';
   let message = headerGreeting;
 
   items.forEach((item, index) => {
     // Calculate required quantity (Target Stock - Current Stock, minimum 1)
     const rawDeficit = item.reorderThreshold - item.stock;
     const requiredQty = Math.max(1, Math.round(rawDeficit * 100) / 100);
-    const unitStr = item.unit ? ` ${item.unit}` : ' pkt';
+    const itemName = getItemName(item, lang);
+    const displayUnit = formatUnit(item.unit, lang);
+    const unitStr = displayUnit ? ` ${displayUnit}` : '';
 
-    message += `${index + 1}. ${item.name} - [Require: ${requiredQty}${unitStr}]\n`;
+    message += `${index + 1}. ${itemName} - [${reqPrefix} ${requiredQty}${unitStr}]\n`;
   });
 
   return message.trim();
@@ -38,17 +42,19 @@ export const sendWhatsAppOrder = async (
   items: KiranaItem[],
   customGreeting?: string,
   fallbackMsg?: string,
-  emptyMsg?: string
+  emptyMsg?: string,
+  requirePrefix?: string,
+  lang: Language = 'hi'
 ): Promise<void> => {
   if (!items || items.length === 0) {
-    toast(emptyMsg || 'Koi bhi maal khatam nahi hai! Sab stock pura hai.', {
+    toast(emptyMsg || 'कोई भी सामान कम नहीं है! सारा स्टॉक पूरा है।', {
       icon: '✅',
       duration: 2500,
     });
     return;
   }
 
-  const message = generateWhatsAppOrder(items, customGreeting);
+  const message = generateWhatsAppOrder(items, customGreeting, requirePrefix, lang);
   const encodedText = encodeURIComponent(message);
   const deepLink = `whatsapp://send?text=${encodedText}`;
 

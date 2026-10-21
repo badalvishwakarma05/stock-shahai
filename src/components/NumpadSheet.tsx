@@ -17,7 +17,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
   onClose,
   onSave,
 }) => {
-  const { t } = useLanguage();
+  const { t, getItemName, formatUnit } = useLanguage();
   const [inputValue, setInputValue] = useState<string>('');
 
   useEffect(() => {
@@ -27,6 +27,9 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
   }, [item, isOpen]);
 
   if (!isOpen || !item) return null;
+
+  const displayName = getItemName(item);
+  const displayUnit = formatUnit(item.unit);
 
   const handleClose = () => {
     triggerHaptic(50);
@@ -105,10 +108,10 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
         <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
           <div className="pr-2 truncate">
             <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 truncate">
-              {item.name}
+              {displayName}
             </h3>
             <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              <span>{t('oldStock')} <strong className="text-slate-800 dark:text-slate-200">{item.stock} {item.unit || ''}</strong></span>
+              <span>{t('oldStock')} <strong className="text-slate-800 dark:text-slate-200">{item.stock} {displayUnit}</strong></span>
               <span>•</span>
               <span>{t('reorderTarget')} <strong className="text-rose-600 dark:text-rose-400">{item.reorderThreshold}</strong></span>
             </div>
@@ -116,7 +119,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
           <button
             onClick={handleClose}
             className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 touch-active active:scale-95 active:brightness-90 transition-all duration-150 flex-shrink-0"
-            aria-label="Close"
+            aria-label={t('closeAria')}
           >
             <X className="w-5 h-5" />
           </button>
@@ -132,9 +135,9 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
               <span className="text-3xl font-extrabold tracking-tight text-emerald-800 dark:text-emerald-400">
                 {inputValue || '0'}
               </span>
-              {item.unit && (
+              {displayUnit && (
                 <span className="text-sm font-bold text-slate-500 dark:text-slate-400">
-                  {item.unit}
+                  {displayUnit}
                 </span>
               )}
             </div>
@@ -192,7 +195,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
           <button
             onClick={() => handleDigit('.')}
             className="h-14 min-h-14 bg-slate-200 dark:bg-slate-700/80 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 text-3xl font-extrabold rounded-2xl flex items-center justify-center shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-slate-300 dark:border-slate-600"
-            aria-label="Decimal"
+            aria-label={t('decimalAria')}
           >
             .
           </button>
@@ -209,7 +212,7 @@ export const NumpadSheet: React.FC<NumpadSheetProps> = ({
           <button
             onClick={handleBackspace}
             className="h-14 min-h-14 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 font-bold rounded-2xl flex items-center justify-center shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150 border border-rose-200 dark:border-rose-800"
-            aria-label="Backspace"
+            aria-label={t('backspaceAria')}
           >
             <Delete className="w-6 h-6 stroke-[2.2]" />
           </button>

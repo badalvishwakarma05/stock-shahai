@@ -1,45 +1,112 @@
 export type Language = 'en' | 'hi';
 
+export const ITEM_NAME_TRANSLATIONS: Record<string, string> = {
+  'Aashirvaad Shudh Chakki Aata 10kg': 'आशीर्वाद शुद्ध चक्की आटा 10 किलो',
+  'Tata Salt (Namak) 1kg': 'टाटा नमक 1 किलो',
+  'Maggi Masala 2-Min Noodles 70g': 'मैगी मसाला 2-मिनट नूडल्स 70 ग्राम',
+  'Fortune Kachi Ghani Mustard Oil 1L': 'फॉर्च्यून कच्ची घानी सरसों का तेल 1 लीटर',
+  'Amul Pasteurised Butter 500g': 'अमूल मक्खन (बटर) 500 ग्राम',
+  'MDH Deggi Mirch Powder 100g': 'एमडीएच देगी मिर्च पाउडर 100 ग्राम',
+  'Lux Rose Soap 100g (Pack of 3)': 'लक्स रोज़ साबुन 100 ग्राम (3 का पैक)',
+  'Madhur Pure Sugar (Chini) 1kg': 'मधुर शुद्ध चीनी 1 किलो',
+  'Red Label Tea (Chai Patti) 250g': 'रेड लेबल चाय पत्ती 250 ग्राम',
+  'India Gate Basmati Rice 1kg': 'इंडिया गेट बासमती चावल 1 किलो',
+  'Everest Turmeric (Haldi) 100g': 'एवरेस्ट हल्दी पाउडर 100 ग्राम',
+  'Parle-G Gold Biscuits 100g': 'पारले-जी गोल्ड बिस्कुट 100 ग्राम',
+  'Dettol Original Soap 75g': 'डेटॉल ओरिजिनल साबुन 75 ग्राम',
+  'Rin Detergent Bar 250g': 'रिन डिटर्जेंट बार 250 ग्राम',
+  'Good Day Butter Cookies 100g': 'गुड डे बटर कुकीज 100 ग्राम',
+  'Vim Dishwash Bar 300g': 'विम डिशवॉश बार 300 ग्राम',
+};
+
+export const UNIT_TRANSLATIONS: Record<string, Record<Language, string>> = {
+  pkt: { en: 'pkt', hi: 'पैकेट' },
+  packet: { en: 'pkt', hi: 'पैकेट' },
+  kg: { en: 'kg', hi: 'किलो' },
+  l: { en: 'L', hi: 'लीटर' },
+  liter: { en: 'L', hi: 'लीटर' },
+  litre: { en: 'L', hi: 'लीटर' },
+  pcs: { en: 'pcs', hi: 'पीस' },
+  pc: { en: 'pc', hi: 'पीस' },
+  box: { en: 'box', hi: 'डिब्बा' },
+  bottle: { en: 'bottle', hi: 'बोतल' },
+};
+
+export const formatUnit = (unit?: string, lang: Language = 'hi'): string => {
+  if (!unit) return '';
+  const clean = unit.trim().toLowerCase();
+  const entry = UNIT_TRANSLATIONS[clean];
+  if (entry) return entry[lang];
+  return unit;
+};
+
+export const getItemName = (item: { name: string; nameHi?: string }, lang: Language = 'hi'): string => {
+  if (!item) return '';
+  if (lang === 'hi') {
+    return item.nameHi || ITEM_NAME_TRANSLATIONS[item.name] || item.name;
+  }
+  return item.name;
+};
+
 export const translations = {
   en: {
-    // Header & App
+    // Header & App Metadata
+    title: "Apna Digital Khata",
     appName: "Apna Digital Khata",
+    subtitle: "Kirana Stock & Reorder",
     appSubtitle: "Kirana Stock & Reorder",
     online: "Online",
-    offline: "App is Offline - Working Locally",
+    offline: "Offline Mode",
+    offlineMode: "Offline Mode",
     themeToggleAria: "Toggle light and dark theme",
     langToggleAria: "Toggle language",
+    langBtnText: "हिंदी",
+    themeLightTooltip: "Switch to Dark Mode",
+    themeDarkTooltip: "Switch to Light Mode",
 
-    // Bottom Navigation
+    // Bottom Navigation Tabs
+    salesTab: "Sales Entry",
     salesEntry: "Sales Entry",
     salesEntrySub: "Record Sale",
+    reorderTab: "Reorder Sheet",
     reorderSheet: "Reorder Sheet",
     reorderSheetSub: "Low Stock",
 
     // Quick Status Bar
     totalItems: "Total Items:",
+    totalStock: "Total Stock:",
     itemsCountSuffix: "Items",
     itemsEndingSoon: "Items Need Reorder",
     allStockGood: "All In Stock",
 
-    // Categories
+    // Category Filter Chips
     catAll: "All",
     catLowStock: "⚠️ Low Stock",
+    catAataDals: "Aata & Dals",
+    catSnacks: "Snacks",
+    catMasala: "Masala & Spices",
+    catOilGhee: "Oils & Ghee",
+    catDairy: "Dairy",
+    catHousehold: "Household",
+    catPersonalCare: "Personal Care",
 
     // Item Cards
     reorderLimit: "Reorder:",
-    outOfStock: "Low Stock!",
+    lowStock: "Low Stock!",
+    outOfStock: "Out of Stock",
     inStock: "In Stock",
     stockLabel: "Stock:",
-    tapToEdit: "Tap to edit",
+    tapToEdit: "Tap",
+    tapToEditFull: "Tap to change stock",
     decrementAria: "Decrease stock by 1",
     incrementAria: "Increase stock by 1",
     addNewItem: "+ Add New Kirana Item",
-    noItemsFound: "No Items Found",
-    noItemsSub: "No items found in this category or all items are in stock.",
+    noItems: "No items found.",
+    noItemsFound: "No items found.",
+    noItemsSub: "No items found in this category or all items are well-stocked.",
     viewAllItems: "View All Items",
 
-    // Reorder Screen
+    // Reorder Screen (Section A & B)
     sectionA: "Section A: Low Stock Items",
     targetStock: "Stock ≤ Target",
     allStockFull: "Great Job! All Stock is Full",
@@ -58,19 +125,24 @@ export const translations = {
     idleInShop: "Stuck in shop:",
     updateBtn: "Update",
 
+    // WhatsApp Order Action & Messages
     whatsappBtn: "Send WhatsApp Order 🚀",
     whatsappGreeting: "Hello, please deliver the following items:\n",
+    whatsappRequirePrefix: "Require:",
     whatsappFallbackToast: "Could not open WhatsApp, order summary copied to clipboard",
     allStockPresentToast: "No low stock items! All items are fully stocked.",
     copiedToast: "Order summary copied to clipboard!",
 
-    // Numpad Sheet
+    // Numpad Bottom Sheet
     oldStock: "Old Stock:",
     reorderTarget: "Reorder Limit:",
     enterNewStock: "Enter New Stock:",
     lowStockWarning: "⚠️ Low Stock (Reorder)",
     clearBtn: "Clear",
     saleLogBtn: "Save Stock",
+    closeAria: "Close",
+    decimalAria: "Decimal",
+    backspaceAria: "Backspace",
 
     // Add Item Modal
     modalPickTitle: "Select New Item",
@@ -82,97 +154,136 @@ export const translations = {
     addSaveBtn: "Save Item",
     pickBtn: "Select ➔",
 
-    // Notifications
+    // Units
+    unitPkt: "pkt",
+    unitKg: "kg",
+    unitL: "L",
+    unitPcs: "pcs",
+
+    // Toast Notifications
     itemAdded: "added to list!",
     soldNotice: "1 Sold! Remaining:",
-    restockedNotice: "Stock restored:",
+    stockRemainingNotice: "left",
+    restockedNotice: "Stock restored!",
     stockUpdatedToast: "Stock updated:",
   },
-  hi: {
-    // Header & App
-    appName: "Apna Digital Khata",
-    appSubtitle: "Kirana Stock & Reorder",
-    online: "Online",
-    offline: "App is Offline - Working Locally",
-    themeToggleAria: "Theme badlein",
-    langToggleAria: "Bhasha badlein",
 
-    // Bottom Navigation
-    salesEntry: "Maal Becha",
-    salesEntrySub: "Sales Entry",
-    reorderSheet: "Khatam Maal",
-    reorderSheetSub: "Reorder Sheet",
+  hi: {
+    // Header & App Metadata (Pure Hindi / Devanagari)
+    title: "अपना डिजिटल खाता",
+    appName: "अपना डिजिटल खाता",
+    subtitle: "किराना स्टॉक और रीऑर्डर",
+    appSubtitle: "किराना स्टॉक और रीऑर्डर",
+    online: "ऑनलाइन",
+    offline: "ऑफ़लाइन मोड",
+    offlineMode: "ऑफ़लाइन मोड",
+    themeToggleAria: "थीम बदलें (लाइट/डार्क)",
+    langToggleAria: "भाषा बदलें (अंग्रेजी/हिंदी)",
+    langBtnText: "EN",
+    themeLightTooltip: "डार्क मोड चालू करें",
+    themeDarkTooltip: "लाइट मोड चालू करें",
+
+    // Bottom Navigation Tabs
+    salesTab: "बिक्री एंट्री",
+    salesEntry: "बिक्री एंट्री",
+    salesEntrySub: "बिक्री दर्ज करें",
+    reorderTab: "रीऑर्डर लिस्ट",
+    reorderSheet: "रीऑर्डर लिस्ट",
+    reorderSheetSub: "कमी का सामान",
 
     // Quick Status Bar
-    totalItems: "Kul Maal (Items):",
-    itemsCountSuffix: "Items",
-    itemsEndingSoon: "Maal Khatam Hone Wala",
-    allStockGood: "Sab Pura Hai",
+    totalItems: "कुल सामान:",
+    totalStock: "कुल स्टॉक:",
+    itemsCountSuffix: "सामान",
+    itemsEndingSoon: "सामान खत्म होने वाला",
+    allStockGood: "सब भरपूर है",
 
-    // Categories
-    catAll: "Sabhi",
-    catLowStock: "⚠️ Kam Stock",
+    // Category Filter Chips
+    catAll: "सभी",
+    catLowStock: "⚠️ कम स्टॉक",
+    catAataDals: "आटा और दालें",
+    catSnacks: "नमकीन और स्नैक्स",
+    catMasala: "मसाले",
+    catOilGhee: "तेल और घी",
+    catDairy: "डेयरी उत्पाद",
+    catHousehold: "घरेलू सामान",
+    catPersonalCare: "पर्सनल केयर",
 
     // Item Cards
-    reorderLimit: "Reorder:",
-    outOfStock: "Kam Hai!",
-    inStock: "Pura Hai",
-    stockLabel: "Stock:",
-    tapToEdit: "Stock badalne ke liye tap karein",
-    decrementAria: "Stock 1 ghatao",
-    incrementAria: "Stock 1 badhao",
-    addNewItem: "+ Naya Kirana Item Jodein",
-    noItemsFound: "Koi Maal Nahi Mila",
-    noItemsSub: "Is category mein koi item nahi hai ya stock pura hai.",
-    viewAllItems: "Sabhi Maal Dekhein",
+    reorderLimit: "रीऑर्डर सीमा:",
+    lowStock: "स्टॉक कम है!",
+    outOfStock: "माल खत्म",
+    inStock: "स्टॉक में है",
+    stockLabel: "स्टॉक:",
+    tapToEdit: "बदलें",
+    tapToEditFull: "स्टॉक बदलने के लिए दबाएं",
+    decrementAria: "स्टॉक 1 कम करें",
+    incrementAria: "स्टॉक 1 बढ़ाएं",
+    addNewItem: "+ नया किराना सामान जोड़ें",
+    noItems: "कोई सामान नहीं मिला।",
+    noItemsFound: "कोई सामान नहीं मिला।",
+    noItemsSub: "इस श्रेणी में कोई सामान नहीं है या सारा स्टॉक भरपूर है।",
+    viewAllItems: "सभी सामान देखें",
 
-    // Reorder Screen
-    sectionA: "Section A: Khatam Maal",
-    targetStock: "Stock ≤ Target",
-    allStockFull: "Badhai Ho! Sab Maal Pura Hai",
-    allStockFullSub: "Koi bhi item reorder limit se neeche nahi hai.",
-    remainingStock: "Bacha:",
-    targetLimit: "Target:",
-    requireToOrder: "Mangwana Hai:",
-    refillBtn: "Naya Maal",
-    refillSub: "Aaya? Tap",
+    // Reorder Screen (Section A & B)
+    sectionA: "भाग क: कम स्टॉक वाला सामान",
+    targetStock: "स्टॉक ≤ सीमा",
+    allStockFull: "बधाई! सारा स्टॉक पूरा है",
+    allStockFullSub: "कोई भी सामान रीऑर्डर सीमा से नीचे नहीं है।",
+    remainingStock: "बचा हुआ:",
+    targetLimit: "लक्ष्य सीमा:",
+    requireToOrder: "जरूरत:",
+    refillBtn: "नया माल",
+    refillSub: "आया? दबाएं",
 
-    sectionB: "Section B: Ruka Hua Maal",
-    daysIdle: "Din Se Na Bika",
-    daysOldSuffix: "Din Puraana",
-    noDeadStock: "Koi Dead Stock Nahi Hai",
-    noDeadStockSub: "Sabhi items pichle 20 din ke andar bike hain.",
-    idleInShop: "Dukan par atka stock:",
-    updateBtn: "Update",
+    sectionB: "भाग ख: रुका हुआ सामान (डेड स्टॉक)",
+    daysIdle: "दिन से नहीं बिका",
+    daysOldSuffix: "दिन पुराना",
+    noDeadStock: "कोई रुका हुआ सामान नहीं है",
+    noDeadStockSub: "सभी सामान पिछले 20 दिनों में बिके हैं।",
+    idleInShop: "दुकान में अटका स्टॉक:",
+    updateBtn: "अपडेट",
 
-    whatsappBtn: "WhatsApp pe Order Bhejein 🚀",
-    whatsappGreeting: "Bhaiya, kripya niche likha saaman bhej dein:\n",
-    whatsappFallbackToast: "WhatsApp open nahi ho paaya, link copy ho gaya hai",
-    allStockPresentToast: "Koi bhi maal khatam nahi hai! Sab stock pura hai.",
-    copiedToast: "Order summary copy ho gaya!",
+    // WhatsApp Order Action & Messages
+    whatsappBtn: "WhatsApp पर ऑर्डर भेजें 🚀",
+    whatsappGreeting: "नमस्ते, कृपया नीचे लिखा सामान भेज दें:\n",
+    whatsappRequirePrefix: "जरूरत:",
+    whatsappFallbackToast: "WhatsApp नहीं खुला, ऑर्डर कॉपी कर लिया गया है",
+    allStockPresentToast: "कोई भी सामान कम नहीं है! सारा स्टॉक पूरा है।",
+    copiedToast: "ऑर्डर क्लिपबोर्ड पर कॉपी हो गया!",
 
-    // Numpad Sheet
-    oldStock: "Purana Stock:",
-    reorderTarget: "Reorder Limit:",
-    enterNewStock: "Naya Stock Darj Karein:",
-    lowStockWarning: "⚠️ Kam Maal (Reorder)",
-    clearBtn: "Saaf",
-    saleLogBtn: "Sale Log Karein",
+    // Numpad Bottom Sheet
+    oldStock: "पुराना स्टॉक:",
+    reorderTarget: "रीऑर्डर सीमा:",
+    enterNewStock: "नया स्टॉक दर्ज करें:",
+    lowStockWarning: "⚠️ कम स्टॉक (रीऑर्डर करें)",
+    clearBtn: "साफ़ करें",
+    saleLogBtn: "स्टॉक सहेजें",
+    closeAria: "बंद करें",
+    decimalAria: "दशमलव",
+    backspaceAria: "हटाएं",
 
     // Add Item Modal
-    modalPickTitle: "Naya Maal Chunein",
-    modalStockTitle: "Stock Darj Karein",
-    popularPresets: "Dukan ke mashhoor items (1-tap chunein):",
-    selectedItem: "Chuna Hua Maal:",
-    initialStock: "Shuruaati Stock:",
-    backBtn: "Wapas Chalein",
-    addSaveBtn: "Log Karein (Add)",
-    pickBtn: "Chunein ➔",
+    modalPickTitle: "नया सामान चुनें",
+    modalStockTitle: "स्टॉक दर्ज करें",
+    popularPresets: "दुकान के लोकप्रिय सामान (1-टैप में चुनें):",
+    selectedItem: "चुना हुआ सामान:",
+    initialStock: "शुरुआती स्टॉक:",
+    backBtn: "पीछे जाएं",
+    addSaveBtn: "सामान सहेजें",
+    pickBtn: "चुनें ➔",
 
-    // Notifications
-    itemAdded: "list mein jud gaya!",
-    soldNotice: "1 Bika! Abhi bacha:",
-    restockedNotice: "stock pura ho gaya!",
-    stockUpdatedToast: "Stock update ho gaya:",
+    // Units
+    unitPkt: "पैकेट",
+    unitKg: "किलो",
+    unitL: "लीटर",
+    unitPcs: "पीस",
+
+    // Toast Notifications
+    itemAdded: "लिस्ट में जुड़ गया!",
+    soldNotice: "1 बिका! बाकी बचा:",
+    stockRemainingNotice: "बचा",
+    restockedNotice: "स्टॉक पूरा हो गया!",
+    stockUpdatedToast: "स्टॉक अपडेट हो गया:",
   },
 };

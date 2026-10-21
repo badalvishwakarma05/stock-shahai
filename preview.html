@@ -97,6 +97,82 @@
       return Math.max(0, Math.floor((new Date() - new Date(lastSoldDate)) / (1000 * 60 * 60 * 24)));
     };
 
+    const translations = {
+      en: {
+        title: "Apna Digital Khata",
+        appName: "Apna Digital Khata",
+        subtitle: "Kirana Stock & Reorder",
+        tagline: "Kirana Stock & Reorder",
+        salesTab: "Sales Entry",
+        salesEntry: "Sales Entry",
+        reorderTab: "Reorder Sheet",
+        reorderSheet: "Reorder Sheet",
+        lowStock: "Low Stock!",
+        outOfStock: "Out of Stock",
+        whatsappBtn: "Send WhatsApp Order 🚀",
+        online: "Online",
+        offline: "Offline Mode",
+        offlineMode: "Offline Mode",
+        totalItems: "Total Items:",
+        totalStock: "Total Stock",
+        itemsLabel: "Items",
+        runningLowWarning: "items running out soon",
+        allStockGood: "All In Stock 👍",
+        needToOrder: "1. Need to Order (Low Stock)",
+        stuckInventory: "2. Stuck Inventory (Dead Stock)",
+        itemsCount: "items",
+        tapToEdit: "Tap",
+        noItems: "No items found.",
+      },
+      hi: {
+        title: "अपना डिजिटल खाता",
+        appName: "अपना डिजिटल खाता",
+        subtitle: "किराना स्टॉक और रीऑर्डर",
+        tagline: "किराना स्टॉक और रीऑर्डर",
+        salesTab: "बिक्री एंट्री",
+        salesEntry: "बिक्री एंट्री",
+        reorderTab: "रीऑर्डर लिस्ट",
+        reorderSheet: "रीऑर्डर लिस्ट",
+        lowStock: "स्टॉक कम है!",
+        outOfStock: "माल खत्म",
+        whatsappBtn: "WhatsApp पर ऑर्डर भेजें 🚀",
+        online: "ऑनलाइन",
+        offline: "ऑफ़लाइन मोड",
+        offlineMode: "ऑफ़लाइन मोड",
+        totalItems: "कुल सामान:",
+        totalStock: "कुल सामान",
+        itemsLabel: "सामान",
+        runningLowWarning: "सामान खत्म होने वाला",
+        allStockGood: "सब भरपूर है 👍",
+        needToOrder: "1. ऑर्डर करने लायक सामान (कम स्टॉक)",
+        stuckInventory: "2. रुका हुआ सामान (डेड स्टॉक)",
+        itemsCount: "सामान",
+        tapToEdit: "बदलें",
+        noItems: "कोई सामान नहीं मिला।",
+      }
+    };
+
+    const ITEM_NAME_TRANSLATIONS = {
+      'Aashirvaad Shudh Chakki Aata 10kg': 'आशीर्वाद शुद्ध चक्की आटा 10 किलो',
+      'Tata Salt (Namak) 1kg': 'टाटा नमक 1 किलो',
+      'Maggi Masala 2-Min Noodles 70g': 'मैगी मसाला 2-मिनट नूडल्स 70 ग्राम',
+      'Fortune Kachi Ghani Mustard Oil 1L': 'फॉर्च्यून कच्ची घानी सरसों का तेल 1 लीटर',
+      'Amul Pasteurised Butter 500g': 'अमूल मक्खन (बटर) 500 ग्राम',
+      'MDH Deggi Mirch Powder 100g': 'एमडीएच देगी मिर्च पाउडर 100 ग्राम',
+      'Lux Rose Soap 100g (Pack of 3)': 'लक्स रोज़ साबुन 100 ग्राम (3 का पैक)',
+    };
+
+    const UNIT_TRANSLATIONS = {
+      pkt: { en: 'pkt', hi: 'पैकेट' },
+      packet: { en: 'pkt', hi: 'पैकेट' },
+      kg: { en: 'kg', hi: 'किलो' },
+      l: { en: 'L', hi: 'लीटर' },
+      liter: { en: 'L', hi: 'लीटर' },
+      litre: { en: 'L', hi: 'लीटर' },
+      pcs: { en: 'pcs', hi: 'पीस' },
+      pc: { en: 'pc', hi: 'पीस' },
+    };
+
     // --- MAIN APP COMPONENT ---
     function App() {
       const [items, setItems] = useState([]);
@@ -105,6 +181,43 @@
       const [toastMsg, setToastMsg] = useState('');
       const [selectedCategory, setSelectedCategory] = useState('Sabhi');
       const [isOnline, setIsOnline] = useState(navigator.onLine);
+      const [theme, setTheme] = useState(() => {
+        const saved = localStorage.getItem('khata_theme');
+        if (saved) return saved;
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      });
+      const [lang, setLang] = useState(() => localStorage.getItem('khata_lang') || 'hi');
+
+      useEffect(() => {
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('khata_theme', theme);
+      }, [theme]);
+
+      useEffect(() => {
+        localStorage.setItem('khata_lang', lang);
+      }, [lang]);
+
+      const t = (key) => translations[lang]?.[key] || translations['hi']?.[key] || key;
+
+      const getItemName = (item) => {
+        if (!item) return '';
+        if (lang === 'hi') {
+          return item.nameHi || ITEM_NAME_TRANSLATIONS[item.name] || item.name;
+        }
+        return item.name;
+      };
+
+      const formatUnit = (unit) => {
+        if (!unit) return '';
+        const clean = unit.trim().toLowerCase();
+        const entry = UNIT_TRANSLATIONS[clean];
+        if (entry) return entry[lang];
+        return unit;
+      };
 
       useEffect(() => {
         const handleOnline = () => setIsOnline(true);
@@ -225,29 +338,58 @@
       });
 
       return (
-        <div className="h-full flex flex-col bg-slate-100 relative">
+        <div className="h-full flex flex-col bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100 relative">
           {/* HEADER */}
-          <header className="bg-slate-900 text-white px-4 py-3 flex items-center justify-between border-b border-slate-800 z-20">
-            <div className="flex items-center space-x-2.5">
+          <header className="bg-slate-900 text-white px-3.5 py-2.5 flex items-center justify-between border-b border-slate-800 z-20 shadow-md">
+            <div className="flex items-center space-x-2">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center font-black text-xl shadow-md">
                 ₹
               </div>
               <div>
-                <h1 className="text-base font-bold tracking-tight">Apna Digital Khata</h1>
-                <p className="text-[11px] text-emerald-400 font-medium">Kirana Stock & Reorder</p>
+                <h1 className="text-sm font-bold tracking-tight text-white">{t('appName')}</h1>
+                <p className="text-[10px] text-emerald-400 font-medium">{t('tagline')}</p>
               </div>
             </div>
-            {isOnline ? (
-              <div className="flex items-center bg-slate-800/80 border border-slate-700 px-2.5 py-1.5 rounded-full" title="Online">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 mr-1.5"></span>
-                <span className="text-[11px] font-medium text-slate-300">Online</span>
-              </div>
-            ) : (
-              <div className="flex items-center bg-amber-500/20 border border-amber-500/50 px-2.5 py-1.5 rounded-full animate-pulse" title="App is Offline - Working Locally">
-                <span className="h-2 w-2 rounded-full bg-amber-400 mr-1.5"></span>
-                <span className="text-[11px] font-bold text-amber-300">App is Offline - Working Locally</span>
-              </div>
-            )}
+
+            <div className="flex items-center space-x-1.5">
+              {/* Language Switcher */}
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic(50);
+                  setLang(prev => (prev === 'hi' ? 'en' : 'hi'));
+                }}
+                title={lang === 'en' ? 'हिंदी में बदलें' : 'Switch to English'}
+                className="h-10 min-w-[56px] px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 active:brightness-90 transition-all duration-150 border border-slate-700 flex items-center justify-center space-x-1.5 font-bold text-xs text-slate-100 select-none shadow-sm"
+              >
+                <span className="text-emerald-400 font-extrabold text-xs">A/अ</span>
+                <span className="font-bold text-xs">{lang === 'en' ? 'हिंदी' : 'EN'}</span>
+              </button>
+
+              {/* Theme Switcher */}
+              <button
+                type="button"
+                onClick={() => {
+                  triggerHaptic(50);
+                  setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+                }}
+                title="Toggle Dark / Light Theme"
+                className="h-10 w-10 rounded-xl bg-slate-800 hover:bg-slate-700 active:scale-95 active:brightness-90 transition-all duration-150 border border-slate-700 flex items-center justify-center text-amber-300 select-none text-base shadow-sm"
+              >
+                {theme === 'dark' ? '☀️' : '🌙'}
+              </button>
+
+              {/* Network Status Badge */}
+              {isOnline ? (
+                <div className="flex items-center bg-slate-800/80 border border-slate-700 px-2 py-1.5 rounded-lg" title="Online">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+                </div>
+              ) : (
+                <div className="flex items-center bg-amber-500/20 border border-amber-500/50 px-2 py-1.5 rounded-lg animate-pulse" title="Offline">
+                  <span className="h-2 w-2 rounded-full bg-amber-400"></span>
+                </div>
+              )}
+            </div>
           </header>
 
           {/* SCREEN CONTENT */}
@@ -289,35 +431,37 @@
                 <div className="flex-1 overflow-y-auto p-3 space-y-2.5 no-scrollbar">
                   {filteredItems.map(item => {
                     const isLow = item.stock <= item.reorderThreshold;
+                    const itemName = getItemName(item);
+                    const displayUnit = formatUnit(item.unit);
                     return (
                       <div
                         key={item.id}
-                        className={`bg-white rounded-2xl p-3.5 shadow-sm border transition-all ${
-                          isLow ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200'
+                        className={`bg-white dark:bg-slate-900 rounded-2xl p-3.5 shadow-sm border transition-all ${
+                          isLow ? 'border-rose-300 dark:border-rose-800 bg-rose-50/20 dark:bg-rose-950/25' : 'border-slate-200 dark:border-slate-800'
                         }`}
                       >
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <h2 className="text-sm font-bold text-slate-900 truncate">{item.name}</h2>
+                            <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">{itemName}</h2>
                             <div className="mt-1 flex items-center space-x-2 text-xs">
-                              <span className="text-slate-500">Reorder: <strong>{item.reorderThreshold} {item.unit}</strong></span>
+                              <span className="text-slate-500 dark:text-slate-400">{t('reorderLimit') || 'रीऑर्डर सीमा:'} <strong>{item.reorderThreshold} {displayUnit}</strong></span>
                               {isLow && (
-                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded">
-                                  Kam Hai!
+                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100 dark:bg-rose-950/60 dark:text-rose-300 px-1.5 py-0.5 rounded">
+                                  {item.stock <= 0 ? t('outOfStock') : t('lowStock')}
                                 </span>
                               )}
                             </div>
                             {/* Tap Stock to Open Sliding Numpad */}
                             <button
                               onClick={() => { triggerHaptic(50); setNumpadItem(item); }}
-                              className="mt-2 inline-flex items-center space-x-1.5 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-300 touch-active active:scale-95 active:brightness-90 transition-all duration-150"
+                              className="mt-2 inline-flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-xl border border-slate-300 dark:border-slate-700 touch-active active:scale-95 active:brightness-90 transition-all duration-150"
                             >
-                              <span className="text-xs text-slate-500">Stock:</span>
-                              <span className={`text-base font-extrabold ${isLow ? 'text-rose-600' : 'text-emerald-700'}`}>
+                              <span className="text-xs text-slate-500 dark:text-slate-400">{t('stockLabel') || 'स्टॉक:'}</span>
+                              <span className={`text-base font-extrabold ${isLow ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-700 dark:text-emerald-400'}`}>
                                 {item.stock}
                               </span>
-                              <span className="text-xs font-bold text-slate-600">{item.unit}</span>
-                              <span className="text-[10px] text-slate-400">✎ Tap</span>
+                              <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{displayUnit}</span>
+                              <span className="text-[10px] text-slate-400 font-bold bg-white dark:bg-slate-700 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-600">{t('tapToEdit')}</span>
                             </button>
                           </div>
 

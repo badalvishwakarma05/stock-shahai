@@ -19,7 +19,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
 const AppContent: React.FC = () => {
-  const { t } = useLanguage();
+  const { t, getItemName, formatUnit } = useLanguage();
   const [activeTab, setActiveTab] = useState<ActiveTab>('sales');
   const [numpadItem, setNumpadItem] = useState<KiranaItem | null>(null);
   const [isNumpadOpen, setIsNumpadOpen] = useState<boolean>(false);
@@ -59,8 +59,9 @@ const AppContent: React.FC = () => {
   const handleIncrement = async (item: KiranaItem) => {
     if (item.id === undefined) return;
     const newStock = await incrementItemStock(item.id);
+    const displayUnit = formatUnit(item.unit);
 
-    toast.success(`+1 ${item.unit || ''} (${newStock} bacha)`, {
+    toast.success(`+1 ${displayUnit} (${newStock} ${t('stockRemainingNotice')})`, {
       duration: 1600,
       icon: '📦',
     });
@@ -71,8 +72,9 @@ const AppContent: React.FC = () => {
     if (item.id === undefined) return;
     if (item.stock <= 0) return;
     const newStock = await decrementItemStock(item.id);
+    const displayUnit = formatUnit(item.unit);
 
-    toast(`${t('soldNotice')} ${newStock} ${item.unit || ''}`, {
+    toast(`${t('soldNotice')} ${newStock} ${displayUnit}`, {
       duration: 1600,
       icon: '💸',
     });
@@ -97,7 +99,8 @@ const AppContent: React.FC = () => {
   const handleQuickRestock = async (item: KiranaItem) => {
     if (item.id === undefined) return;
     await setItemStockDirect(item.id, item.reorderThreshold);
-    toast.success(`${item.name} ${t('restockedNotice')}`, {
+    const itemName = getItemName(item);
+    toast.success(`${itemName} ${t('restockedNotice')}`, {
       duration: 2000,
     });
   };

@@ -22,7 +22,7 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
   items: propItems,
   onOpenNumpad,
 }) => {
-  const { t } = useLanguage();
+  const { language, t, getItemName, formatUnit } = useLanguage();
 
   // 1. Reactive live query from Dexie IndexedDB
   const liveItems = useLiveQuery(() => db.items.toArray(), []) || [];
@@ -39,7 +39,9 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
       lowStockItems,
       t('whatsappGreeting'),
       t('whatsappFallbackToast'),
-      t('allStockPresentToast')
+      t('allStockPresentToast'),
+      t('whatsappRequirePrefix'),
+      language
     );
   };
 
@@ -83,6 +85,8 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
                   1,
                   Math.round((item.reorderThreshold - item.stock) * 100) / 100
                 );
+                const itemName = getItemName(item);
+                const displayUnit = formatUnit(item.unit);
                 return (
                   <div
                     key={item.id}
@@ -90,19 +94,19 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
                   >
                     <div className="flex-1 min-w-0">
                       <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
-                        {item.name}
+                        {itemName}
                       </h3>
                       <div className="flex items-center space-x-2 text-xs mt-1">
                         <span className="text-rose-600 dark:text-rose-400 font-bold">
-                          {t('remainingStock')} {item.stock} {item.unit || ''}
+                          {t('remainingStock')} {item.stock} {displayUnit}
                         </span>
                         <span className="text-slate-400">•</span>
                         <span className="text-slate-600 dark:text-slate-400 font-medium">
-                          {t('targetLimit')} {item.reorderThreshold} {item.unit || ''}
+                          {t('targetLimit')} {item.reorderThreshold} {displayUnit}
                         </span>
                       </div>
                       <div className="mt-1.5 inline-block bg-rose-600 dark:bg-rose-700 text-white font-extrabold text-[11px] px-2.5 py-0.5 rounded-md shadow-xs">
-                        {t('requireToOrder')} +{deficit} {item.unit || 'pkt'}
+                        {t('requireToOrder')} +{deficit} {displayUnit || formatUnit('pkt')}
                       </div>
                     </div>
 
@@ -110,7 +114,7 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
                     <button
                       onClick={() => handleRefillClick(item)}
                       className="h-14 min-h-14 px-3.5 bg-slate-900 dark:bg-slate-700 hover:dark:bg-slate-600 text-white rounded-xl text-xs font-bold flex flex-col items-center justify-center touch-active active:scale-95 active:brightness-90 transition-all duration-150 flex-shrink-0 shadow-sm"
-                      aria-label={`${item.name} ${t('refillBtn')}`}
+                      aria-label={`${itemName} ${t('refillBtn')}`}
                     >
                       <span>{t('refillBtn')}</span>
                       <span className="text-emerald-400 text-[10px]">{t('refillSub')}</span>
@@ -150,6 +154,8 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
             <div className="space-y-2">
               {deadStockItems.map((item) => {
                 const daysIdle = getDaysSinceSold(item.lastSoldDate);
+                const itemName = getItemName(item);
+                const displayUnit = formatUnit(item.unit);
                 return (
                   <div
                     key={item.id}
@@ -162,10 +168,10 @@ export const ReorderSheetScreen: React.FC<ReorderSheetScreenProps> = ({
                         </span>
                       </div>
                       <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 mt-1 truncate">
-                        {item.name}
+                        {itemName}
                       </h3>
                       <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        {t('idleInShop')} <strong className="text-amber-800 dark:text-amber-400">{item.stock} {item.unit || ''}</strong>
+                        {t('idleInShop')} <strong className="text-amber-800 dark:text-amber-400">{item.stock} {displayUnit}</strong>
                       </div>
                     </div>
 

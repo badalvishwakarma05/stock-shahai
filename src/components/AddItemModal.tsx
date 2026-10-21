@@ -13,15 +13,15 @@ interface AddItemModalProps {
 
 // Popular Indian Kirana Item Presets (1-tap selection, no typing required)
 const POPULAR_PRESETS = [
-  { name: 'Madhur Pure Sugar (Chini) 1kg', unit: 'pkt', category: 'Aata & Dals', threshold: 10, defaultStock: 5 },
-  { name: 'Red Label Tea (Chai Patti) 250g', unit: 'pkt', category: 'Snacks', threshold: 8, defaultStock: 4 },
-  { name: 'India Gate Basmati Rice 1kg', unit: 'pkt', category: 'Aata & Dals', threshold: 6, defaultStock: 3 },
-  { name: 'Everest Turmeric (Haldi) 100g', unit: 'pkt', category: 'Masala & Spices', threshold: 10, defaultStock: 6 },
-  { name: 'Parle-G Gold Biscuits 100g', unit: 'pkt', category: 'Snacks', threshold: 24, defaultStock: 12 },
-  { name: 'Dettol Original Soap 75g', unit: 'pcs', category: 'Personal Care', threshold: 10, defaultStock: 5 },
-  { name: 'Rin Detergent Bar 250g', unit: 'pcs', category: 'Household', threshold: 12, defaultStock: 8 },
-  { name: 'Good Day Butter Cookies 100g', unit: 'pkt', category: 'Snacks', threshold: 15, defaultStock: 5 },
-  { name: 'Vim Dishwash Bar 300g', unit: 'pcs', category: 'Household', threshold: 10, defaultStock: 4 },
+  { name: 'Madhur Pure Sugar (Chini) 1kg', nameHi: 'मधुर शुद्ध चीनी 1 किलो', unit: 'pkt', category: 'Aata & Dals', threshold: 10, defaultStock: 5 },
+  { name: 'Red Label Tea (Chai Patti) 250g', nameHi: 'रेड लेबल चाय पत्ती 250 ग्राम', unit: 'pkt', category: 'Snacks', threshold: 8, defaultStock: 4 },
+  { name: 'India Gate Basmati Rice 1kg', nameHi: 'इंडिया गेट बासमती चावल 1 किलो', unit: 'pkt', category: 'Aata & Dals', threshold: 6, defaultStock: 3 },
+  { name: 'Everest Turmeric (Haldi) 100g', nameHi: 'एवरेस्ट हल्दी पाउडर 100 ग्राम', unit: 'pkt', category: 'Masala & Spices', threshold: 10, defaultStock: 6 },
+  { name: 'Parle-G Gold Biscuits 100g', nameHi: 'पारले-जी गोल्ड बिस्कुट 100 ग्राम', unit: 'pkt', category: 'Snacks', threshold: 24, defaultStock: 12 },
+  { name: 'Dettol Original Soap 75g', nameHi: 'डेटॉल ओरिजिनल साबुन 75 ग्राम', unit: 'pcs', category: 'Personal Care', threshold: 10, defaultStock: 5 },
+  { name: 'Rin Detergent Bar 250g', nameHi: 'रिन डिटर्जेंट बार 250 ग्राम', unit: 'pcs', category: 'Household', threshold: 12, defaultStock: 8 },
+  { name: 'Good Day Butter Cookies 100g', nameHi: 'गुड डे बटर कुकीज 100 ग्राम', unit: 'pkt', category: 'Snacks', threshold: 15, defaultStock: 5 },
+  { name: 'Vim Dishwash Bar 300g', nameHi: 'विम डिशवॉश बार 300 ग्राम', unit: 'pcs', category: 'Household', threshold: 10, defaultStock: 4 },
 ];
 
 export const AddItemModal: React.FC<AddItemModalProps> = ({
@@ -29,7 +29,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   onClose,
   onAdd,
 }) => {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const [selectedPreset, setSelectedPreset] = useState<typeof POPULAR_PRESETS[0] | null>(null);
   const [stockInput, setStockInput] = useState<string>('5');
   const [thresholdInput, setThresholdInput] = useState<string>('10');
@@ -56,6 +56,29 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     setStockInput((prev) => (prev.length <= 1 ? '0' : prev.slice(0, -1)));
   };
 
+  const getCategoryLabel = (cat: string) => {
+    switch (cat) {
+      case 'Aata & Dals': return t('catAataDals');
+      case 'Snacks': return t('catSnacks');
+      case 'Masala & Spices': return t('catMasala');
+      case 'Oils & Ghee': return t('catOilGhee');
+      case 'Dairy': return t('catDairy');
+      case 'Household': return t('catHousehold');
+      case 'Personal Care': return t('catPersonalCare');
+      default: return cat;
+    }
+  };
+
+  const getUnitLabel = (unit: string) => {
+    switch (unit) {
+      case 'pkt': return t('unitPkt');
+      case 'kg': return t('unitKg');
+      case 'L': return t('unitL');
+      case 'pcs': return t('unitPcs');
+      default: return unit;
+    }
+  };
+
   const handleSave = () => {
     triggerHaptic(50);
     if (!selectedPreset) return;
@@ -63,8 +86,10 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
     const threshold = parseFloat(thresholdInput) || 5;
 
     const today = new Date().toISOString().split('T')[0];
+    const itemName = language === 'hi' ? (selectedPreset.nameHi || selectedPreset.name) : selectedPreset.name;
+
     onAdd({
-      name: selectedPreset.name,
+      name: itemName,
       unit: selectedPreset.unit,
       category: selectedPreset.category,
       stock,
@@ -72,7 +97,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       lastSoldDate: today,
     });
 
-    toast.success(`${selectedPreset.name} ${t('itemAdded')}`);
+    toast.success(`${itemName} ${t('itemAdded')}`);
     setActiveStep('pick');
     setSelectedPreset(null);
     onClose();
@@ -102,6 +127,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
           </div>
           <button
             onClick={handleClose}
+            aria-label={t('closeAria')}
             className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 touch-active active:scale-95 duration-150"
           >
             <X className="w-5 h-5" />
@@ -113,35 +139,40 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">
               {t('popularPresets')}
             </p>
-            {POPULAR_PRESETS.map((preset, idx) => (
-              <button
-                key={idx}
-                onClick={() => handleSelectPreset(preset)}
-                className="w-full min-h-14 p-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-emerald-50/60 dark:hover:bg-slate-700/80 active:bg-emerald-100/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-left touch-active active:scale-95 duration-150 transition-all"
-              >
-                <div>
-                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{preset.name}</h4>
-                  <span className="text-xs text-slate-400 dark:text-slate-500">
-                    {preset.category} • {preset.unit}
+            {POPULAR_PRESETS.map((preset, idx) => {
+              const displayName = language === 'hi' ? preset.nameHi : preset.name;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => handleSelectPreset(preset)}
+                  className="w-full min-h-14 p-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-emerald-50/60 dark:hover:bg-slate-700/80 active:bg-emerald-100/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-left touch-active active:scale-95 duration-150 transition-all"
+                >
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{displayName}</h4>
+                    <span className="text-xs text-slate-400 dark:text-slate-500">
+                      {getCategoryLabel(preset.category)} • {getUnitLabel(preset.unit)}
+                    </span>
+                  </div>
+                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800 shadow-xs">
+                    {t('pickBtn')}
                   </span>
-                </div>
-                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800 shadow-xs">
-                  {t('pickBtn')}
-                </span>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         ) : (
           <div className="p-3 bg-white dark:bg-slate-900 space-y-2 transition-colors duration-150">
             <div className="p-3 bg-slate-50 dark:bg-slate-950/70 rounded-2xl border border-slate-200 dark:border-slate-800">
               <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">{t('selectedItem')}</span>
               <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
-                {selectedPreset?.name}
+                {language === 'hi' ? (selectedPreset?.nameHi || selectedPreset?.name) : selectedPreset?.name}
               </h4>
               <div className="mt-2 flex items-baseline space-x-2">
                 <span className="text-xs text-slate-500 dark:text-slate-400">{t('initialStock')}</span>
                 <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{stockInput}</span>
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{selectedPreset?.unit}</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">
+                  {selectedPreset ? getUnitLabel(selectedPreset.unit) : ''}
+                </span>
               </div>
             </div>
 

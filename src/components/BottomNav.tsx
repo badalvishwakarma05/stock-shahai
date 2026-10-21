@@ -39,7 +39,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             <PackageMinus className={`w-6 h-6 ${activeTab === 'sales' ? 'text-emerald-600 dark:text-emerald-400 stroke-[2.4]' : 'text-slate-400 dark:text-slate-500'}`} />
           </div>
           <span className="text-[12px] mt-0.5 tracking-tight font-semibold">
-            {t('salesEntry')}
+            {t('salesTab')}
           </span>
           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal leading-none">
             {t('salesEntrySub')}
@@ -54,7 +54,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
               ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50/70 dark:bg-emerald-950/40 font-bold border-t-2 border-emerald-600 dark:border-emerald-500'
               : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
           }`}
-          aria-label={t('reorderSheet')}
+          aria-label={t('reorderTab')}
         >
           <div className="relative">
             <ClipboardList className={`w-6 h-6 ${activeTab === 'reorder' ? 'text-emerald-600 dark:text-emerald-400 stroke-[2.4]' : 'text-slate-400 dark:text-slate-500'}`} />
@@ -65,7 +65,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
             )}
           </div>
           <span className="text-[12px] mt-0.5 tracking-tight font-semibold">
-            {t('reorderSheet')}
+            {t('reorderTab')}
           </span>
           <span className="text-[10px] text-slate-400 dark:text-slate-500 font-normal leading-none">
             {t('reorderSheetSub')}
