@@ -1,11 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Store, WifiOff } from 'lucide-react';
+import { Store, WifiOff, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
+import { triggerHaptic } from '../utils/haptics';
 
 interface HeaderProps {
   isOnline?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({ isOnline: propIsOnline }) => {
+  const { theme, toggleTheme } = useTheme();
+  const { language, toggleLanguage, t } = useLanguage();
+
   const [internalOnline, setInternalOnline] = useState<boolean>(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
@@ -25,50 +31,85 @@ export const Header: React.FC<HeaderProps> = ({ isOnline: propIsOnline }) => {
 
   const isOnline = propIsOnline ?? internalOnline;
 
+  const handleThemeClick = () => {
+    triggerHaptic(50);
+    toggleTheme();
+  };
+
+  const handleLanguageClick = () => {
+    triggerHaptic(50);
+    toggleLanguage();
+  };
+
   return (
-    <header className="bg-slate-900 text-white px-4 pt-3 pb-3 border-b border-slate-800 shadow-md flex-shrink-0 z-20">
-      <div className="flex items-center justify-between">
-        {/* Brand & Shop Title */}
-        <div className="flex items-center space-x-2.5">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center shadow-md">
+    <header className="bg-slate-900 dark:bg-slate-950 text-white px-3.5 pt-2.5 pb-2.5 border-b border-slate-800 dark:border-slate-800/80 shadow-md flex-shrink-0 z-20 transition-colors duration-150">
+      <div className="flex items-center justify-between gap-2">
+        {/* Left: Brand & Shop Title */}
+        <div className="flex items-center space-x-2 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center shadow-md flex-shrink-0">
             <Store className="w-5 h-5 text-white" />
           </div>
-          <div>
-            <div className="flex items-center space-x-1.5">
-              <h1 className="text-base font-bold tracking-tight text-white leading-none">
-                Apna Digital Khata
-              </h1>
-            </div>
-            <p className="text-[11px] text-emerald-400 font-medium mt-0.5">
-              Kirana Stock & Reorder Sheet
+          <div className="min-w-0">
+            <h1 className="text-sm sm:text-base font-bold tracking-tight text-white leading-none truncate">
+              {t('appName')}
+            </h1>
+            <p className="text-[10px] sm:text-[11px] text-emerald-400 font-medium mt-0.5 truncate">
+              {t('appSubtitle')}
             </p>
           </div>
         </div>
 
-        {/* Dynamic Online / Offline Indicator Badge */}
-        {isOnline ? (
-          <div
-            className="flex items-center bg-slate-800/80 border border-slate-700 px-2.5 py-1.5 rounded-full shadow-inner"
-            title="Online"
+        {/* Right: Tactile Quick Controls & Offline Indicator */}
+        <div className="flex items-center space-x-1.5 flex-shrink-0">
+          {/* Language Toggle Button ("A/अ" - Fat-Finger Friendly) */}
+          <button
+            onClick={handleLanguageClick}
+            className="h-10 min-w-10 px-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 text-xs font-bold text-slate-200 flex items-center justify-center space-x-1 shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150"
+            aria-label={t('langToggleAria')}
+            title="Toggle English / Hinglish"
           >
-            <span className="relative flex h-2 w-2 mr-1.5">
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            <span className="text-emerald-400 font-black text-sm">A/अ</span>
+            <span className="text-[10px] font-semibold text-slate-300 uppercase">
+              {language === 'hi' ? 'HI' : 'EN'}
             </span>
-            <span className="text-[11px] font-medium text-slate-300 tracking-wide">
-              Online
-            </span>
-          </div>
-        ) : (
-          <div
-            className="flex items-center bg-amber-500/20 border border-amber-500/50 px-2.5 py-1.5 rounded-full shadow-inner animate-pulse"
-            title="App is Offline - Working Locally"
+          </button>
+
+          {/* Theme Toggle Button (Sun/Moon - Fat-Finger Friendly) */}
+          <button
+            onClick={handleThemeClick}
+            className="w-10 h-10 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 border border-slate-700 text-slate-200 flex items-center justify-center shadow-sm touch-active active:scale-95 active:brightness-90 transition-all duration-150"
+            aria-label={t('themeToggleAria')}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            <WifiOff className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
-            <span className="text-[11px] font-bold text-amber-300 tracking-tight">
-              App is Offline - Working Locally
-            </span>
-          </div>
-        )}
+            {theme === 'dark' ? (
+              <Sun className="w-5 h-5 text-amber-400 stroke-[2.2]" />
+            ) : (
+              <Moon className="w-5 h-5 text-indigo-300 stroke-[2.2]" />
+            )}
+          </button>
+
+          {/* Dynamic Online / Offline Indicator Badge */}
+          {isOnline ? (
+            <div
+              className="flex items-center bg-slate-800/90 border border-slate-700 px-2 py-1.5 rounded-xl shadow-inner"
+              title={t('online')}
+            >
+              <span className="relative flex h-2 w-2 mr-1">
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span className="text-[10px] font-semibold text-slate-300 hidden xs:inline">
+                {t('online')}
+              </span>
+            </div>
+          ) : (
+            <div
+              className="flex items-center bg-amber-500/20 border border-amber-500/50 px-2 py-1.5 rounded-xl shadow-inner animate-pulse"
+              title={t('offline')}
+            >
+              <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );

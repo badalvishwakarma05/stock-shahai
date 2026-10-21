@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { X, Check, PackagePlus, Sparkles } from 'lucide-react';
+import { X, Check, PackagePlus } from 'lucide-react';
 import { KiranaItem } from '../types';
 import toast from 'react-hot-toast';
+import { useLanguage } from '../context/LanguageContext';
+import { triggerHaptic } from '../utils/haptics';
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   onClose,
   onAdd,
 }) => {
+  const { t } = useLanguage();
   const [selectedPreset, setSelectedPreset] = useState<typeof POPULAR_PRESETS[0] | null>(null);
   const [stockInput, setStockInput] = useState<string>('5');
   const [thresholdInput, setThresholdInput] = useState<string>('10');
@@ -35,6 +38,7 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   if (!isOpen) return null;
 
   const handleSelectPreset = (preset: typeof POPULAR_PRESETS[0]) => {
+    triggerHaptic(50);
     setSelectedPreset(preset);
     setStockInput(preset.defaultStock.toString());
     setThresholdInput(preset.threshold.toString());
@@ -42,15 +46,18 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
   };
 
   const handleNumpadKey = (num: string) => {
+    triggerHaptic(50);
     if (stockInput === '0') setStockInput(num);
     else if (stockInput.length < 4) setStockInput((prev) => prev + num);
   };
 
   const handleBackspace = () => {
+    triggerHaptic(50);
     setStockInput((prev) => (prev.length <= 1 ? '0' : prev.slice(0, -1)));
   };
 
   const handleSave = () => {
+    triggerHaptic(50);
     if (!selectedPreset) return;
     const stock = parseFloat(stockInput) || 0;
     const threshold = parseFloat(thresholdInput) || 5;
@@ -65,32 +72,37 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
       lastSoldDate: today,
     });
 
-    toast.success(`${selectedPreset.name} list mein jud gaya!`);
+    toast.success(`${selectedPreset.name} ${t('itemAdded')}`);
     setActiveStep('pick');
     setSelectedPreset(null);
     onClose();
   };
 
+  const handleClose = () => {
+    triggerHaptic(50);
+    onClose();
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center select-none">
-      <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 bg-slate-950/60 dark:bg-black/75 backdrop-blur-sm" onClick={handleClose} />
 
-      <div className="relative w-full max-w-md bg-white rounded-t-3xl shadow-sheet overflow-hidden animate-slide-up border-t border-slate-200">
+      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-3xl shadow-sheet overflow-hidden animate-slide-up border-t border-slate-200 dark:border-slate-800 transition-colors duration-150">
         <div className="pt-2.5 pb-1 flex justify-center">
-          <div className="w-12 h-1.5 bg-slate-300 rounded-full" />
+          <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full" />
         </div>
 
         {/* Modal Header */}
-        <div className="px-4 py-2.5 flex items-center justify-between border-b border-slate-100">
+        <div className="px-4 py-2.5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center space-x-2">
-            <PackagePlus className="w-5 h-5 text-emerald-600" />
-            <h3 className="text-base font-bold text-slate-900">
-              {activeStep === 'pick' ? 'Naya Maal Chunein' : 'Stock Darj Karein'}
+            <PackagePlus className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
+              {activeStep === 'pick' ? t('modalPickTitle') : t('modalStockTitle')}
             </h3>
           </div>
           <button
-            onClick={onClose}
-            className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 touch-active"
+            onClick={handleClose}
+            className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 touch-active active:scale-95 duration-150"
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,38 +110,38 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
         {activeStep === 'pick' ? (
           <div className="p-4 max-h-[70vh] overflow-y-auto no-scrollbar space-y-2">
-            <p className="text-xs text-slate-500 font-medium mb-1">
-              Dukan ke mashhoor items (1-tap chunein):
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">
+              {t('popularPresets')}
             </p>
             {POPULAR_PRESETS.map((preset, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSelectPreset(preset)}
-                className="w-full min-h-14 p-3 bg-slate-50 hover:bg-emerald-50/60 active:bg-emerald-100/80 rounded-2xl border border-slate-200 flex items-center justify-between text-left touch-active transition-all"
+                className="w-full min-h-14 p-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-emerald-50/60 dark:hover:bg-slate-700/80 active:bg-emerald-100/80 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center justify-between text-left touch-active active:scale-95 duration-150 transition-all"
               >
                 <div>
-                  <h4 className="text-sm font-bold text-slate-800">{preset.name}</h4>
-                  <span className="text-xs text-slate-400">
+                  <h4 className="text-sm font-bold text-slate-800 dark:text-slate-100">{preset.name}</h4>
+                  <span className="text-xs text-slate-400 dark:text-slate-500">
                     {preset.category} • {preset.unit}
                   </span>
                 </div>
-                <span className="text-xs font-bold text-emerald-700 bg-white px-2.5 py-1 rounded-lg border border-emerald-200 shadow-xs">
-                  Chunein ➔
+                <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-white dark:bg-slate-900 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800 shadow-xs">
+                  {t('pickBtn')}
                 </span>
               </button>
             ))}
           </div>
         ) : (
-          <div className="p-3 bg-white space-y-2">
-            <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200">
-              <span className="text-xs text-slate-400 font-semibold">Chuna Hua Maal:</span>
-              <h4 className="text-base font-bold text-slate-900 mt-0.5">
+          <div className="p-3 bg-white dark:bg-slate-900 space-y-2 transition-colors duration-150">
+            <div className="p-3 bg-slate-50 dark:bg-slate-950/70 rounded-2xl border border-slate-200 dark:border-slate-800">
+              <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">{t('selectedItem')}</span>
+              <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 mt-0.5">
                 {selectedPreset?.name}
               </h4>
               <div className="mt-2 flex items-baseline space-x-2">
-                <span className="text-xs text-slate-500">Shuruaati Stock:</span>
-                <span className="text-2xl font-black text-emerald-700">{stockInput}</span>
-                <span className="text-xs font-bold text-slate-600">{selectedPreset?.unit}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{t('initialStock')}</span>
+                <span className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{stockInput}</span>
+                <span className="text-xs font-bold text-slate-600 dark:text-slate-300">{selectedPreset?.unit}</span>
               </div>
             </div>
 
@@ -139,26 +151,26 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
                 <button
                   key={digit}
                   onClick={() => handleNumpadKey(digit)}
-                  className="h-12 min-h-12 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xl font-bold rounded-xl flex items-center justify-center touch-active border border-slate-200"
+                  className="h-12 min-h-12 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xl font-bold rounded-xl flex items-center justify-center touch-active active:scale-95 duration-150 border border-slate-200 dark:border-slate-700"
                 >
                   {digit}
                 </button>
               ))}
               <button
-                onClick={() => setStockInput('0')}
-                className="h-12 min-h-12 bg-slate-100 text-slate-600 text-xs font-bold rounded-xl flex items-center justify-center touch-active border border-slate-200"
+                onClick={() => { triggerHaptic(50); setStockInput('0'); }}
+                className="h-12 min-h-12 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-xl flex items-center justify-center touch-active active:scale-95 duration-150 border border-slate-200 dark:border-slate-700"
               >
-                Saaf
+                {t('clearBtn')}
               </button>
               <button
                 onClick={() => handleNumpadKey('0')}
-                className="h-12 min-h-12 bg-slate-100 text-slate-800 text-xl font-bold rounded-xl flex items-center justify-center touch-active border border-slate-200"
+                className="h-12 min-h-12 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-xl font-bold rounded-xl flex items-center justify-center touch-active active:scale-95 duration-150 border border-slate-200 dark:border-slate-700"
               >
                 0
               </button>
               <button
                 onClick={handleBackspace}
-                className="h-12 min-h-12 bg-rose-50 text-rose-600 font-bold rounded-xl flex items-center justify-center touch-active border border-rose-200"
+                className="h-12 min-h-12 bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 font-bold rounded-xl flex items-center justify-center touch-active active:scale-95 duration-150 border border-rose-200 dark:border-rose-800"
               >
                 ⌫
               </button>
@@ -166,17 +178,17 @@ export const AddItemModal: React.FC<AddItemModalProps> = ({
 
             <div className="grid grid-cols-2 gap-2 pt-1">
               <button
-                onClick={() => setActiveStep('pick')}
-                className="h-14 min-h-14 bg-slate-100 text-slate-700 font-bold rounded-2xl flex items-center justify-center text-sm touch-active border border-slate-300"
+                onClick={() => { triggerHaptic(50); setActiveStep('pick'); }}
+                className="h-14 min-h-14 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-2xl flex items-center justify-center text-sm touch-active active:scale-95 duration-150 border border-slate-300 dark:border-slate-700"
               >
-                Wapas Chalein
+                {t('backBtn')}
               </button>
               <button
                 onClick={handleSave}
-                className="h-14 min-h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl flex items-center justify-center space-x-1.5 shadow-lg shadow-emerald-600/30 touch-active"
+                className="h-14 min-h-14 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold rounded-2xl flex items-center justify-center space-x-1.5 shadow-lg shadow-emerald-600/30 touch-active active:scale-95 duration-150"
               >
                 <Check className="w-5 h-5 stroke-[2.5]" />
-                <span>Log Karein (Add)</span>
+                <span>{t('addSaveBtn')}</span>
               </button>
             </div>
           </div>

@@ -15,8 +15,11 @@ import { ReorderSheetScreen } from './components/ReorderSheetScreen';
 import { NumpadSheet } from './components/NumpadSheet';
 import { AddItemModal } from './components/AddItemModal';
 import { Toaster, toast } from 'react-hot-toast';
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider, useLanguage } from './context/LanguageContext';
 
-export const App: React.FC = () => {
+const AppContent: React.FC = () => {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<ActiveTab>('sales');
   const [numpadItem, setNumpadItem] = useState<KiranaItem | null>(null);
   const [isNumpadOpen, setIsNumpadOpen] = useState<boolean>(false);
@@ -69,7 +72,7 @@ export const App: React.FC = () => {
     if (item.stock <= 0) return;
     const newStock = await decrementItemStock(item.id);
 
-    toast(`1 Bika! Abhi ${newStock} ${item.unit || ''} bacha`, {
+    toast(`${t('soldNotice')} ${newStock} ${item.unit || ''}`, {
       duration: 1600,
       icon: '💸',
     });
@@ -84,7 +87,7 @@ export const App: React.FC = () => {
   // Save exact stock from Bottom Sheet Numpad ("Sale Log Karein")
   const handleSaveNumpad = async (itemId: number, newStock: number) => {
     await setItemStockDirect(itemId, newStock);
-    toast.success(`Stock update ho gaya: ${newStock}`, {
+    toast.success(`${t('stockUpdatedToast')} ${newStock}`, {
       duration: 2000,
       icon: '✅',
     });
@@ -94,7 +97,7 @@ export const App: React.FC = () => {
   const handleQuickRestock = async (item: KiranaItem) => {
     if (item.id === undefined) return;
     await setItemStockDirect(item.id, item.reorderThreshold);
-    toast.success(`${item.name} stock pura ho gaya!`, {
+    toast.success(`${item.name} ${t('restockedNotice')}`, {
       duration: 2000,
     });
   };
@@ -105,9 +108,9 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-900 text-slate-900 select-none overflow-hidden font-sans">
+    <div className="h-full flex flex-col bg-slate-900 dark:bg-black text-slate-900 dark:text-slate-100 select-none overflow-hidden font-sans transition-colors duration-150">
       {/* Mobile Frame Container */}
-      <div className="flex-1 flex flex-col h-full max-w-md w-full mx-auto bg-slate-100 shadow-2xl relative overflow-hidden">
+      <div className="flex-1 flex flex-col h-full max-w-md w-full mx-auto bg-slate-100 dark:bg-slate-950 shadow-2xl relative overflow-hidden transition-colors duration-150">
         {/* Top Header */}
         <Header isOnline={isOnline} />
 
@@ -152,12 +155,12 @@ export const App: React.FC = () => {
           onAdd={handleAddItem}
         />
 
-        {/* Snappy Bottom-Center Micro-Interactions (Placed safely above Thumb Zone) */}
+        {/* Snappy Bottom-Center Micro-Interactions */}
         <Toaster
           position="bottom-center"
           gutter={8}
           containerStyle={{
-            bottom: 74, // just above the 64px bottom nav
+            bottom: 74,
           }}
           toastOptions={{
             style: {
@@ -167,7 +170,7 @@ export const App: React.FC = () => {
               fontWeight: 600,
               padding: '10px 16px',
               borderRadius: '14px',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
               border: '1px solid #334155',
             },
             success: {
@@ -180,6 +183,16 @@ export const App: React.FC = () => {
         />
       </div>
     </div>
+  );
+};
+
+export const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
+    </ThemeProvider>
   );
 };
 
