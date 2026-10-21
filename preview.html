@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="hi" class="h-full select-none">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#15803d" />
+  <title>Apna Digital Khata - Kirana Reorder App (Live Preview)</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Dexie.js IndexedDB CDN -->
+  <script src="https://unpkg.com/dexie@3.2.4/dist/dexie.js"></script>
+  <!-- React & ReactDOM CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <!-- Babel Standalone for JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+      overscroll-behavior-y: none;
+      font-family: 'Inter', sans-serif;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .touch-active:active {
+      transform: scale(0.96);
+      filter: brightness(0.92);
+      transition: transform 0.08s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+    .animate-slide-up {
+      animation: slideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  </style>
+</head>
+<body class="h-full bg-slate-900 flex justify-center items-center overflow-hidden">
+  <div id="root" class="h-full w-full max-w-md bg-white shadow-2xl flex flex-col relative overflow-hidden"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // --- 1. DEXIE DATABASE SETUP ---
+    const db = new Dexie('KiranaReorderDB_Standalone');
+    db.version(1).stores({
+      items: '++id, name, stock, reorderThreshold, lastSoldDate'
+    });
+
+    const getPastDate = (daysAgo) => {
+      const d = new Date();
+      d.setDate(d.getDate() - daysAgo);
+      return d.toISOString().split('T')[0];
+    };
+
+    const seedInitialData = async () => {
+      const count = await db.items.count();
+      if (count === 0) {
+        const today = new Date().toISOString().split('T')[0];
+        await db.items.bulkAdd([
+          { name: 'Aashirvaad Shudh Chakki Aata 10kg', stock: 4, unit: 'pkt', reorderThreshold: 6, lastSoldDate: today, category: 'Aata & Dals' },
+          { name: 'Tata Salt (Namak) 1kg', stock: 14, unit: 'pkt', reorderThreshold: 10, lastSoldDate: today, category: 'Masala & Spices' },
+          { name: 'Maggi Masala 2-Min Noodles 70g', stock: 2, unit: 'pkt', reorderThreshold: 20, lastSoldDate: today, category: 'Snacks' },
+          { name: 'Fortune Kachi Ghani Mustard Oil 1L', stock: 1.5, unit: 'L', reorderThreshold: 8, lastSoldDate: getPastDate(2), category: 'Oils & Ghee' },
+          { name: 'Lux Rose Soap 100g (Pack of 3)', stock: 12, unit: 'pcs', reorderThreshold: 5, lastSoldDate: getPastDate(28), category: 'Personal Care' },
+          { name: 'MDH Deggi Mirch Powder 100g', stock: 9, unit: 'pkt', reorderThreshold: 4, lastSoldDate: getPastDate(35), category: 'Masala & Spices' },
+          { name: 'Amul Pasteurised Butter 500g', stock: 0.5, unit: 'kg', reorderThreshold: 3, lastSoldDate: today, category: 'Dairy' },
+        ]);
+      }
+    };
+
+    const isDeadStock = (lastSoldDate) => {
+      if (!lastSoldDate) return true;
+      const sold = new Date(lastSoldDate);
+      const now = new Date();
+      return Math.floor((now - sold) / (1000 * 60 * 60 * 24)) > 20;
+    };
+
+    const getDaysSinceSold = (lastSoldDate) => {
+      if (!lastSoldDate) return 999;
+      return Math.max(0, Math.floor((new Date() - new Date(lastSoldDate)) / (1000 * 60 * 60 * 24)));
+    };
+
+    // --- MAIN APP COMPONENT ---
+    function App() {
+      const [items, setItems] = useState([]);
+      const [activeTab, setActiveTab] = useState('sales');
+      const [numpadItem, setNumpadItem] = useState(null);
+      const [toastMsg, setToastMsg] = useState('');
+      const [selectedCategory, setSelectedCategory] = useState('Sabhi');
+
+      const loadItems = async () => {
+        const allItems = await db.items.toArray();
+        setItems(allItems);
+      };
+
+      useEffect(() => {
+        seedInitialData().then(() => loadItems());
+      }, []);
+
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        if ('vibrate' in navigator) {
+          try { navigator.vibrate(15); } catch(e){}
+        }
+        setTimeout(() => setToastMsg(''), 2200);
+      };
+
+      // 1-Tap Increment
+      const handleIncrement = async (item) => {
+        const delta = item.unit === 'kg' && item.stock < 2 ? 0.5 : 1;
+        const newStock = Math.round((item.stock + delta) * 100) / 100;
+        await db.items.update(item.id, { stock: newStock });
+        await loadItems();
+        showToast(`+${delta} ${item.unit} (${newStock} bacha)`);
+      };
+
+      // 1-Tap Decrement
+      const handleDecrement = async (item) => {
+        const delta = item.unit === 'kg' && item.stock <= 2 && item.stock > 0 ? 0.5 : 1;
+        const newStock = Math.max(0, Math.round((item.stock - delta) * 100) / 100);
+        const today = new Date().toISOString().split('T')[0];
+        await db.items.update(item.id, { stock: newStock, lastSoldDate: today });
+        await loadItems();
+        showToast(`1 Bika! Abhi ${newStock} ${item.unit} bacha`);
+      };
+
+      // Save from Custom Sliding Numpad
+      const handleSaveNumpad = async (itemId, newStock) => {
+        const today = new Date().toISOString().split('T')[0];
+        await db.items.update(itemId, { stock: newStock, lastSoldDate: today });
+        await loadItems();
+        setNumpadItem(null);
+        showToast(`Stock update ho gaya: ${newStock}`);
+      };
+
+      // WhatsApp Order Generator & Deep Link for Section A
+      const generateWhatsAppOrder = (items) => {
+        if (!items || items.length === 0) return '';
+        let msg = `Bhaiya, kripya niche likha saaman bhej dein:\n`;
+        items.forEach((item, index) => {
+          const rawDeficit = item.reorderThreshold - item.stock;
+          const requiredQty = Math.max(1, Math.round(rawDeficit * 100) / 100);
+          const unitStr = item.unit ? ` ${item.unit}` : ' pkt';
+          msg += `${index + 1}. ${item.name} - [Require: ${requiredQty}${unitStr}]\n`;
+        });
+        return msg.trim();
+      };
+
+      const handleWhatsAppOrder = (khatamMaal) => {
+        if (khatamMaal.length === 0) {
+          showToast('Koi maal khatam nahi hai!');
+          return;
+        }
+        const text = generateWhatsAppOrder(khatamMaal);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(() => {});
+        }
+
+        const encoded = encodeURIComponent(text);
+        let appOpened = false;
+        const onBlur = () => {
+          appOpened = true;
+          window.removeEventListener('blur', onBlur);
+        };
+        window.addEventListener('blur', onBlur);
+
+        try {
+          window.location.href = `whatsapp://send?text=${encoded}`;
+        } catch (e) {
+          showToast('WhatsApp open nahi ho paaya, link copy ho gaya hai');
+          return;
+        }
+
+        setTimeout(() => {
+          window.removeEventListener('blur', onBlur);
+          if (!appOpened && document.hasFocus()) {
+            showToast('WhatsApp open nahi ho paaya, link copy ho gaya hai');
+          }
+        }, 1200);
+      };
+
+      const khatamMaal = items.filter(i => i.stock < i.reorderThreshold);
+      const rukaHuaMaal = items.filter(i => isDeadStock(i.lastSoldDate));
+
+      const filteredItems = items.filter(i => {
+        if (selectedCategory === 'Sabhi') return true;
+        if (selectedCategory === 'Kam Stock') return i.stock <= i.reorderThreshold;
+        return i.category === selectedCategory;
+      });
+
+      return (
+        <div className="h-full flex flex-col bg-slate-100 relative">
+          {/* HEADER */}
+          <header className="bg-slate-900 text-white px-4 py-3 flex items-center justify-between border-b border-slate-800 z-20">
+            <div className="flex items-center space-x-2.5">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-green-500 flex items-center justify-center font-black text-xl shadow-md">
+                ₹
+              </div>
+              <div>
+                <h1 className="text-base font-bold tracking-tight">Apna Digital Khata</h1>
+                <p className="text-[11px] text-emerald-400 font-medium">Kirana Stock & Reorder</p>
+              </div>
+            </div>
+            <div className="flex items-center bg-emerald-950 border border-emerald-600/50 px-2.5 py-1.5 rounded-full">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
+              <span className="text-[11px] font-bold text-emerald-300">Offline Mode</span>
+            </div>
+          </header>
+
+          {/* SCREEN CONTENT */}
+          <main className="flex-1 overflow-hidden relative flex flex-col pb-16">
+            {activeTab === 'sales' ? (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                {/* Status Bar */}
+                <div className="bg-white px-4 py-2 border-b border-slate-200 flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">Kul Maal: <strong className="text-slate-800">{items.length} Items</strong></span>
+                  {khatamMaal.length > 0 ? (
+                    <span className="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">
+                      ⚠️ {khatamMaal.length} Maal Khatam Hone Wala
+                    </span>
+                  ) : (
+                    <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                      ✅ Sab Pura Hai
+                    </span>
+                  )}
+                </div>
+
+                {/* Filter Chips */}
+                <div className="bg-white px-3 py-2 border-b border-slate-200 flex space-x-2 overflow-x-auto no-scrollbar">
+                  {['Sabhi', 'Kam Stock', 'Aata & Dals', 'Snacks', 'Masala & Spices', 'Oils & Ghee'].map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap touch-active border ${
+                        selectedCategory === cat
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-sm'
+                          : 'bg-slate-100 text-slate-600 border-slate-200'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Items List */}
+                <div className="flex-1 overflow-y-auto p-3 space-y-2.5 no-scrollbar">
+                  {filteredItems.map(item => {
+                    const isLow = item.stock <= item.reorderThreshold;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`bg-white rounded-2xl p-3.5 shadow-sm border transition-all ${
+                          isLow ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h2 className="text-sm font-bold text-slate-900 truncate">{item.name}</h2>
+                            <div className="mt-1 flex items-center space-x-2 text-xs">
+                              <span className="text-slate-500">Reorder: <strong>{item.reorderThreshold} {item.unit}</strong></span>
+                              {isLow && (
+                                <span className="text-[10px] font-bold text-rose-600 bg-rose-100 px-1.5 py-0.5 rounded">
+                                  Kam Hai!
+                                </span>
+                              )}
+                            </div>
+                            {/* Tap Stock to Open Sliding Numpad */}
+                            <button
+                              onClick={() => setNumpadItem(item)}
+                              className="mt-2 inline-flex items-center space-x-1.5 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-300 touch-active"
+                            >
+                              <span className="text-xs text-slate-500">Stock:</span>
+                              <span className={`text-base font-extrabold ${isLow ? 'text-rose-600' : 'text-emerald-700'}`}>
+                                {item.stock}
+                              </span>
+                              <span className="text-xs font-bold text-slate-600">{item.unit}</span>
+                              <span className="text-[10px] text-slate-400">✎ Tap</span>
+                            </button>
+                          </div>
+
+                          {/* Fat Finger Targets (+ / -) Minimum 56px */}
+                          <div className="flex items-center space-x-2 flex-shrink-0">
+                            <button
+                              onClick={() => handleDecrement(item)}
+                              disabled={item.stock <= 0}
+                              className={`w-14 h-14 min-w-14 min-h-14 rounded-2xl flex items-center justify-center font-black text-2xl shadow-md touch-active ${
+                                item.stock <= 0
+                                  ? 'bg-slate-100 text-slate-300 cursor-not-allowed border'
+                                  : 'bg-rose-50 text-rose-600 border-2 border-rose-200 active:bg-rose-600 active:text-white'
+                              }`}
+                            >
+                              -
+                            </button>
+                            <button
+                              onClick={() => handleIncrement(item)}
+                              className="w-14 h-14 min-w-14 min-h-14 rounded-2xl bg-emerald-600 active:bg-emerald-800 text-white flex items-center justify-center font-black text-2xl shadow-md shadow-emerald-600/30 touch-active border-2 border-emerald-500"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* REORDER SHEET SCREEN */
+              <div className="flex-1 flex flex-col overflow-hidden relative">
+                <div className="flex-1 overflow-y-auto p-3 pb-36 space-y-4 no-scrollbar">
+                  {/* Section A: Khatam Maal */}
+                  <section>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xs font-black text-rose-950 uppercase tracking-wide flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-rose-600"></span>
+                        Section A: Khatam Maal ({khatamMaal.length})
+                      </h2>
+                      <span className="text-[10px] font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full border border-rose-200">
+                        Stock &lt; Limit
+                      </span>
+                    </div>
+
+                    {khatamMaal.length === 0 ? (
+                      <div className="bg-white p-4 rounded-2xl border border-emerald-200 text-sm font-bold text-slate-700">
+                        ✅ Sabhi items ka stock pura hai!
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {khatamMaal.map(item => {
+                          const deficit = Math.max(0, Math.round((item.reorderThreshold - item.stock) * 100) / 100);
+                          return (
+                            <div key={item.id} className="bg-white rounded-2xl p-3 border-2 border-rose-200 bg-rose-50/20 shadow-sm flex items-center justify-between">
+                              <div className="flex-1 min-w-0 pr-2">
+                                <h3 className="text-sm font-bold text-slate-900 truncate">{item.name}</h3>
+                                <div className="text-xs text-rose-600 font-bold mt-0.5">
+                                  Bacha: {item.stock} {item.unit} (Target: {item.reorderThreshold})
+                                </div>
+                                <span className="inline-block mt-1 bg-rose-600 text-white text-[11px] font-black px-2 py-0.5 rounded">
+                                  Chahiye: +{deficit} {item.unit}
+                                </span>
+                              </div>
+                              <button
+                                onClick={() => setNumpadItem(item)}
+                                className="h-14 min-h-14 px-3 bg-slate-900 text-white rounded-xl text-xs font-bold flex flex-col items-center justify-center touch-active"
+                              >
+                                <span>Refill</span>
+                                <span className="text-emerald-400 text-[10px]">Tap</span>
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+
+                  {/* Section B: Dead Stock */}
+                  <section>
+                    <div className="flex items-center justify-between mb-2">
+                      <h2 className="text-xs font-black text-amber-950 uppercase tracking-wide flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                        Section B: Ruka Hua Maal ({rukaHuaMaal.length})
+                      </h2>
+                      <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full border border-amber-200">
+                        &gt;20 Din Se Na Bika
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {rukaHuaMaal.map(item => (
+                        <div key={item.id} className="bg-white rounded-2xl p-3 border border-amber-200 bg-amber-50/30 flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] font-bold bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded">
+                              {getDaysSinceSold(item.lastSoldDate)} Din Se Atka
+                            </span>
+                            <h3 className="text-sm font-bold text-slate-800 mt-1">{item.name}</h3>
+                            <div className="text-xs text-slate-500">Stock: {item.stock} {item.unit}</div>
+                          </div>
+                          <button
+                            onClick={() => setNumpadItem(item)}
+                            className="h-12 min-h-12 px-3 bg-amber-100 text-amber-900 font-bold rounded-xl text-xs touch-active border border-amber-300"
+                          >
+                            Update
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                </div>
+
+                {/* MASSIVE FIXED BOTTOM DEEP LINK BUTTON */}
+                <button
+                  onClick={() => handleWhatsAppOrder(khatamMaal)}
+                  disabled={khatamMaal.length === 0}
+                  className={`fixed bottom-16 w-[90%] left-[5%] max-w-[calc(28rem*0.9)] right-[5%] mx-auto h-14 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-xl font-bold flex items-center justify-center space-x-2 shadow-lg touch-active z-20 text-base transition-all ${
+                    khatamMaal.length === 0 ? 'opacity-50 cursor-not-allowed bg-slate-300 shadow-none' : 'shadow-green-500/30'
+                  }`}
+                  aria-label="WhatsApp pe Order Bhejein"
+                >
+                  <span>WhatsApp pe Order Bhejein 🚀</span>
+                </button>
+              </div>
+            )}
+          </main>
+
+          {/* BOTTOM NAVIGATION (Thumb Zone) */}
+          <nav className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white border-t border-slate-200 z-30 grid grid-cols-2 h-16 shadow-lg">
+            <button
+              onClick={() => setActiveTab('sales')}
+              className={`flex flex-col items-center justify-center min-h-14 touch-active ${
+                activeTab === 'sales' ? 'text-emerald-700 bg-emerald-50/70 font-bold border-t-2 border-emerald-600' : 'text-slate-500'
+              }`}
+            >
+              <span className="text-lg">📦</span>
+              <span className="text-xs mt-0.5">Sales Entry</span>
+              <span className="text-[10px] text-slate-400">Maal Becha</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('reorder')}
+              className={`flex flex-col items-center justify-center min-h-14 touch-active relative ${
+                activeTab === 'reorder' ? 'text-emerald-700 bg-emerald-50/70 font-bold border-t-2 border-emerald-600' : 'text-slate-500'
+              }`}
+            >
+              <div className="relative">
+                <span className="text-lg">📝</span>
+                {khatamMaal.length > 0 && (
+                  <span className="absolute -top-1 -right-3 bg-rose-600 text-white text-[10px] font-black rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
+                    {khatamMaal.length}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs mt-0.5">Reorder Sheet</span>
+              <span className="text-[10px] text-slate-400">Khatam Maal</span>
+            </button>
+          </nav>
+
+          {/* CUSTOM SLIDING BOTTOM SHEET NUMPAD (Strictly Bans Native Keyboard) */}
+          {numpadItem && (
+            <NumpadSheet
+              item={numpadItem}
+              onClose={() => setNumpadItem(null)}
+              onSave={handleSaveNumpad}
+            />
+          )}
+
+          {/* SNAPPY BOTTOM-CENTER TOAST */}
+          {toastMsg && (
+            <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-2xl border border-slate-700 flex items-center space-x-2">
+              <span>{toastMsg}</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // --- NUMPAD BOTTOM SHEET COMPONENT ---
+    function NumpadSheet({ item, onClose, onSave }) {
+      const [val, setVal] = useState(item.stock.toString());
+
+      const handleKey = (digit) => {
+        if ('vibrate' in navigator) { try { navigator.vibrate(10); } catch(e){} }
+        if (digit === '.') {
+          if (val.includes('.')) return;
+          setVal(prev => prev === '' ? '0.' : prev + '.');
+          return;
+        }
+        if (val === '0') setVal(digit);
+        else if (val.length < 6) setVal(prev => prev + digit);
+      };
+
+      const handleBackspace = () => {
+        if ('vibrate' in navigator) { try { navigator.vibrate(10); } catch(e){} }
+        setVal(prev => prev.length <= 1 ? '0' : prev.slice(0, -1));
+      };
+
+      const handleQuickAdd = (amt) => {
+        const cur = parseFloat(val) || 0;
+        setVal((Math.max(0, Math.round((cur + amt) * 100) / 100)).toString());
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-end justify-center select-none">
+          <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs" onClick={onClose}></div>
+          <div className="relative w-full max-w-md bg-white rounded-t-3xl shadow-2xl overflow-hidden animate-slide-up border-t border-slate-200">
+            <div className="pt-2.5 pb-1 flex justify-center">
+              <div className="w-12 h-1.5 bg-slate-300 rounded-full"></div>
+            </div>
+            
+            <div className="px-4 py-2 flex items-center justify-between border-b border-slate-100">
+              <div className="truncate">
+                <h3 className="text-base font-bold text-slate-900 truncate">{item.name}</h3>
+                <span className="text-xs text-slate-500">Purana Stock: <strong>{item.stock} {item.unit}</strong> | Target: {item.reorderThreshold}</span>
+              </div>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 font-bold text-slate-500 touch-active">✕</button>
+            </div>
+
+            <div className="px-4 py-3 bg-slate-50 flex items-center justify-between border-b border-slate-200">
+              <div>
+                <span className="text-[11px] font-bold uppercase text-slate-500">Naya Stock:</span>
+                <div className="text-3xl font-black text-emerald-800">{val || '0'} <span className="text-sm text-slate-500 font-bold">{item.unit}</span></div>
+              </div>
+            </div>
+
+            {/* Quick Increment Chips */}
+            <div className="grid grid-cols-4 gap-2 px-3 pt-2 bg-white">
+              <button onClick={() => handleQuickAdd(-1)} className="h-10 bg-slate-100 font-bold rounded-xl text-sm touch-active border">- 1</button>
+              <button onClick={() => handleQuickAdd(1)} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active border border-emerald-200">+ 1</button>
+              <button onClick={() => handleQuickAdd(5)} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active border border-emerald-200">+ 5</button>
+              <button onClick={() => handleQuickAdd(10)} className="h-10 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-sm touch-active border border-emerald-200">+ 10</button>
+            </div>
+
+            {/* Fat Numpad Grid (h-14) */}
+            <div className="p-3 grid grid-cols-3 gap-2 bg-white">
+              {['1','2','3','4','5','6','7','8','9'].map(d => (
+                <button
+                  key={d}
+                  onClick={() => handleKey(d)}
+                  className="h-14 min-h-14 bg-slate-100 active:bg-slate-300 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center border border-slate-200 touch-active"
+                >
+                  {d}
+                </button>
+              ))}
+              <button onClick={() => handleKey('.')} className="h-14 min-h-14 bg-slate-200 text-slate-900 text-3xl font-black rounded-2xl flex items-center justify-center touch-active">.</button>
+              <button onClick={() => handleKey('0')} className="h-14 min-h-14 bg-slate-100 text-slate-800 text-2xl font-bold rounded-2xl flex items-center justify-center border touch-active">0</button>
+              <button onClick={handleBackspace} className="h-14 min-h-14 bg-rose-50 text-rose-600 font-bold text-xl rounded-2xl flex items-center justify-center border border-rose-200 touch-active">⌫</button>
+            </div>
+
+            <div className="p-3 pt-0 grid grid-cols-4 gap-2 bg-white">
+              <button onClick={() => setVal('0')} className="col-span-1 h-14 min-h-14 bg-slate-100 text-slate-600 text-xs font-bold rounded-2xl border touch-active">Saaf</button>
+              <button
+                onClick={() => onSave(item.id, parseFloat(val) || 0)}
+                className="col-span-3 h-14 min-h-14 bg-emerald-600 active:bg-emerald-800 text-white text-base font-bold rounded-2xl flex items-center justify-center shadow-lg touch-active"
+              >
+                ✓ Log Karein (Stock Save)
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
