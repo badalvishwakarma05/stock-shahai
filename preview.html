@@ -99,6 +99,18 @@
       const [numpadItem, setNumpadItem] = useState(null);
       const [toastMsg, setToastMsg] = useState('');
       const [selectedCategory, setSelectedCategory] = useState('Sabhi');
+      const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+      useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+          window.removeEventListener('online', handleOnline);
+          window.removeEventListener('offline', handleOffline);
+        };
+      }, []);
 
       const loadItems = async () => {
         const allItems = await db.items.toArray();
@@ -213,10 +225,17 @@
                 <p className="text-[11px] text-emerald-400 font-medium">Kirana Stock & Reorder</p>
               </div>
             </div>
-            <div className="flex items-center bg-emerald-950 border border-emerald-600/50 px-2.5 py-1.5 rounded-full">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse mr-1.5"></span>
-              <span className="text-[11px] font-bold text-emerald-300">Offline Mode</span>
-            </div>
+            {isOnline ? (
+              <div className="flex items-center bg-slate-800/80 border border-slate-700 px-2.5 py-1.5 rounded-full" title="Online">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 mr-1.5"></span>
+                <span className="text-[11px] font-medium text-slate-300">Online</span>
+              </div>
+            ) : (
+              <div className="flex items-center bg-amber-500/20 border border-amber-500/50 px-2.5 py-1.5 rounded-full animate-pulse" title="App is Offline - Working Locally">
+                <span className="h-2 w-2 rounded-full bg-amber-400 mr-1.5"></span>
+                <span className="text-[11px] font-bold text-amber-300">App is Offline - Working Locally</span>
+              </div>
+            )}
           </header>
 
           {/* SCREEN CONTENT */}

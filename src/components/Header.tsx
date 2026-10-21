@@ -1,7 +1,30 @@
-import React from 'react';
-import { Store, WifiOff, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Store, WifiOff } from 'lucide-react';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  isOnline?: boolean;
+}
+
+export const Header: React.FC<HeaderProps> = ({ isOnline: propIsOnline }) => {
+  const [internalOnline, setInternalOnline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+
+  useEffect(() => {
+    const handleOnline = () => setInternalOnline(true);
+    const handleOffline = () => setInternalOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  const isOnline = propIsOnline ?? internalOnline;
+
   return (
     <header className="bg-slate-900 text-white px-4 pt-3 pb-3 border-b border-slate-800 shadow-md flex-shrink-0 z-20">
       <div className="flex items-center justify-between">
@@ -22,16 +45,30 @@ export const Header: React.FC = () => {
           </div>
         </div>
 
-        {/* Static Green Offline Badge */}
-        <div className="flex items-center bg-emerald-950/80 border border-emerald-600/50 px-2.5 py-1.5 rounded-full shadow-inner">
-          <span className="relative flex h-2.5 w-2.5 mr-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-          </span>
-          <span className="text-[11px] font-semibold text-emerald-300 tracking-wide">
-            Offline Mode
-          </span>
-        </div>
+        {/* Dynamic Online / Offline Indicator Badge */}
+        {isOnline ? (
+          <div
+            className="flex items-center bg-slate-800/80 border border-slate-700 px-2.5 py-1.5 rounded-full shadow-inner"
+            title="Online"
+          >
+            <span className="relative flex h-2 w-2 mr-1.5">
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <span className="text-[11px] font-medium text-slate-300 tracking-wide">
+              Online
+            </span>
+          </div>
+        ) : (
+          <div
+            className="flex items-center bg-amber-500/20 border border-amber-500/50 px-2.5 py-1.5 rounded-full shadow-inner animate-pulse"
+            title="App is Offline - Working Locally"
+          >
+            <WifiOff className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
+            <span className="text-[11px] font-bold text-amber-300 tracking-tight">
+              App is Offline - Working Locally
+            </span>
+          </div>
+        )}
       </div>
     </header>
   );

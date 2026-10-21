@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="112" fill="#16a34a"/>
+  <!-- Bag Outline -->
+  <path d="M160 200 L352 200 L332 380 L180 380 Z" fill="none" stroke="#ffffff" stroke-width="20" stroke-linejoin="round"/>
+  <!-- Bag Handle -->
+  <path d="M208 200 C208 140 304 140 304 200" fill="none" stroke="#ffffff" stroke-width="20" stroke-linecap="round"/>
+  <!-- Rupee Symbol -->
+  <path d="M224 245 L288 245 M224 270 L288 270 M224 245 L224 335 M224 270 C260 270 286 285 260 315 L288 345" fill="none" stroke="#ffffff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -21,6 +21,23 @@ export const App: React.FC = () => {
   const [numpadItem, setNumpadItem] = useState<KiranaItem | null>(null);
   const [isNumpadOpen, setIsNumpadOpen] = useState<boolean>(false);
   const [isAddItemOpen, setIsAddItemOpen] = useState<boolean>(false);
+  const [isOnline, setIsOnline] = useState<boolean>(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
+
+  // Monitor network connectivity dynamically
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Initialize and seed Dexie database on first run
   useEffect(() => {
@@ -92,7 +109,7 @@ export const App: React.FC = () => {
       {/* Mobile Frame Container */}
       <div className="flex-1 flex flex-col h-full max-w-md w-full mx-auto bg-slate-100 shadow-2xl relative overflow-hidden">
         {/* Top Header */}
-        <Header />
+        <Header isOnline={isOnline} />
 
         {/* Main Screen Content */}
         <main className="flex-1 flex flex-col overflow-hidden relative pb-16">
