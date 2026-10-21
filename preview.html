@@ -250,6 +250,8 @@
         }
       };
 
+      const [isReportOpen, setIsReportOpen] = useState(false);
+
       // 1-Tap Increment
       const handleIncrement = async (item) => {
         triggerHaptic(50);
@@ -257,18 +259,32 @@
         const newStock = Math.round((item.stock + delta) * 100) / 100;
         await db.items.update(item.id, { stock: newStock });
         await loadItems();
-        showToast(`+${delta} ${item.unit} (${newStock} bacha)`);
+        showToast(`+${delta} ${formatUnit(item.unit)} (${newStock} ${t('stockRemainingNotice')})`);
       };
 
-      // 1-Tap Decrement
+      // 1-Tap Decrement - Tracks soldToday
       const handleDecrement = async (item) => {
         triggerHaptic(50);
         const delta = item.unit === 'kg' && item.stock <= 2 && item.stock > 0 ? 0.5 : 1;
         const newStock = Math.max(0, Math.round((item.stock - delta) * 100) / 100);
+        const amountDecreased = Math.round((item.stock - newStock) * 100) / 100;
         const today = new Date().toISOString().split('T')[0];
-        await db.items.update(item.id, { stock: newStock, lastSoldDate: today });
+        await db.items.update(item.id, {
+          stock: newStock,
+          lastSoldDate: today,
+          soldToday: Math.round(((item.soldToday || 0) + amountDecreased) * 100) / 100,
+        });
         await loadItems();
-        showToast(`1 Bika! Abhi ${newStock} ${item.unit} bacha`);
+        showToast(`${t('soldNotice')} ${newStock} ${formatUnit(item.unit)}`);
+      };
+
+      // End Day / Reset Daily Sales
+      const handleResetDailySales = async () => {
+        triggerHaptic(50);
+        await db.items.toCollection().modify({ soldToday: 0 });
+        await loadItems();
+        showToast('दिन समाप्त किया गया!');
+        setIsReportOpen(false);
       };
 
       // Save from Custom Sliding Numpad
@@ -397,15 +413,21 @@
             {activeTab === 'sales' ? (
               <div className="flex-1 flex flex-col overflow-hidden">
                 {/* Status Bar */}
-                <div className="bg-white px-4 py-2 border-b border-slate-200 flex justify-between items-center text-xs">
-                  <span className="text-slate-500 font-medium">Kul Maal: <strong className="text-slate-800">{items.length} Items</strong></span>
+                <div className="bg-white dark:bg-slate-900 px-3.5 py-2 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center text-xs">
+                  <button
+                    onClick={() => { triggerHaptic(50); setIsReportOpen(true); }}
+                    className="h-8 px-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-lg shadow-sm flex items-center space-x-1"
+                  >
+                    <span>📊</span>
+                    <span>आज की रिपोर्ट</span>
+                  </button>
                   {khatamMaal.length > 0 ? (
-                    <span className="bg-rose-100 text-rose-700 font-bold px-2 py-0.5 rounded-full border border-rose-200">
-                      ⚠️ {khatamMaal.length} Maal Khatam Hone Wala
+                    <span className="bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                      ⚠️ {khatamMaal.length} {t('itemsEndingSoon')}
                     </span>
                   ) : (
-                    <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                      ✅ Sab Pura Hai
+                    <span className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 font-bold px-2 py-0.5 rounded-full">
+                      {t('allStockGood')}
                     </span>
                   )}
                 </div>
@@ -627,6 +649,51 @@
               onClose={() => setNumpadItem(null)}
               onSave={handleSaveNumpad}
             />
+          )}
+
+          {/* DAILY SALES REPORT MODAL */}
+          {isReportOpen && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 select-none">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-sm p-4 shadow-xl border border-slate-200 dark:border-slate-800">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <span>📊</span> आज की रिपोर्ट
+                  </h3>
+                  <button
+                    onClick={() => { triggerHaptic(50); setIsReportOpen(false); }}
+                    className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="py-2">
+                  {items.filter(i => (i.soldToday || 0) > 0).length === 0 ? (
+                    <p className="text-sm text-slate-500 dark:text-slate-400 py-6 text-center font-medium">
+                      आज कोई बिक्री नहीं हुई
+                    </p>
+                  ) : (
+                    <div className="max-h-60 overflow-y-auto space-y-2 py-1 pr-1 no-scrollbar">
+                      {items.filter(i => (i.soldToday || 0) > 0).map(item => (
+                        <div key={item.id} className="flex justify-between items-center py-2 px-2.5 bg-slate-50 dark:bg-slate-800/80 rounded-xl text-sm border border-slate-100 dark:border-slate-700/60">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200 truncate pr-2">
+                            {getItemName(item)}
+                          </span>
+                          <span className="font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap text-xs bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800/80">
+                            {item.soldToday} {formatUnit(item.unit)} बिका
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={handleResetDailySales}
+                  className="w-full mt-2 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold rounded-xl text-sm shadow-sm transition-all"
+                >
+                  दिन समाप्त करें
+                </button>
+              </div>
+            </div>
           )}
 
           {/* SNAPPY BOTTOM-CENTER TOAST */}

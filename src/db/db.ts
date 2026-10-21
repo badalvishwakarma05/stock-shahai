@@ -134,18 +134,30 @@ export const incrementItemStock = async (id: number): Promise<number> => {
 
 /**
  * Action Handler: Update specific item's stock -1 directly in Dexie (prevent going below 0)
+ * Increases soldToday by the decreased amount.
  */
 export const decrementItemStock = async (id: number): Promise<number> => {
   return await db.transaction('rw', db.items, async () => {
     const item = await db.items.get(id);
     if (!item) return 0;
     const newStock = Math.max(0, Math.round((item.stock - 1) * 100) / 100);
+    const amountDecreased = Math.round((item.stock - newStock) * 100) / 100;
     const today = new Date().toISOString().split('T')[0];
     await db.items.update(id, {
       stock: newStock,
       lastSoldDate: today,
+      soldToday: Math.round(((item.soldToday || 0) + amountDecreased) * 100) / 100,
     });
     return newStock;
+  });
+};
+
+/**
+ * Reset soldToday for all items when ending day ("दिन समाप्त करें")
+ */
+export const resetDailySales = async (): Promise<void> => {
+  await db.transaction('rw', db.items, async () => {
+    await db.items.toCollection().modify({ soldToday: 0 });
   });
 };
 

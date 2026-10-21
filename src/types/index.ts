@@ -9,6 +9,7 @@ export interface KiranaItem {
   unitHi?: string; // e.g. 'किलो', 'पैकेट', 'पीस', 'लीटर'
   lastSoldDate?: string; // YYYY-MM-DD
   pricePerUnit?: number;
+  soldToday?: number;
 }
 
 export type ActiveTab = 'sales' | 'reorder';

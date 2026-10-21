@@ -6,6 +6,7 @@ import { KiranaItem } from '../types';
 import { PlusCircle, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { triggerHaptic } from '../utils/haptics';
+import { DailyReportModal } from './DailyReportModal';
 
 interface SalesEntryScreenProps {
   items?: KiranaItem[];
@@ -23,6 +24,7 @@ export const SalesEntryScreen: React.FC<SalesEntryScreenProps> = ({
   onOpenAddItem,
 }) => {
   const { t } = useLanguage();
+  const [isReportOpen, setIsReportOpen] = useState<boolean>(false);
 
   // Live reactive query directly from Dexie IndexedDB
   const liveItems = useLiveQuery(() => db.items.toArray(), []) || [];
@@ -62,12 +64,18 @@ export const SalesEntryScreen: React.FC<SalesEntryScreenProps> = ({
 
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-150">
-      {/* Top Quick Status Strip */}
-      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-4 py-2.5 flex items-center justify-between flex-shrink-0 transition-colors duration-150">
-        <div>
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('totalItems')}</span>
-          <span className="ml-1.5 text-sm font-bold text-slate-800 dark:text-slate-100">{items.length} {t('itemsCountSuffix')}</span>
-        </div>
+      {/* Top Quick Status Strip & Daily Report Button */}
+      <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3.5 py-2 flex items-center justify-between flex-shrink-0 transition-colors duration-150 gap-2">
+        <button
+          onClick={() => {
+            triggerHaptic(50);
+            setIsReportOpen(true);
+          }}
+          className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition-all"
+        >
+          <span>📊</span>
+          <span>आज की रिपोर्ट</span>
+        </button>
         <div className="flex items-center text-xs">
           {lowStockCount > 0 ? (
             <span className="bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 font-bold px-2.5 py-1 rounded-full border border-rose-200 dark:border-rose-800 flex items-center">
@@ -139,6 +147,13 @@ export const SalesEntryScreen: React.FC<SalesEntryScreenProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Lightweight Daily Sales Report Modal */}
+      <DailyReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        items={items}
+      />
     </div>
   );
 };
